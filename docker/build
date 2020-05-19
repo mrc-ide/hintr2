@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -ex
+HERE=$(dirname $0)
+. $HERE/common
+
+function cleanup {
+    echo "Cleaning up"
+    rm -rf $PACKAGE_ROOT/naomi
+    rm -f $PACKAGE_ROOT/docker/Dockerfile.worker
+    rm -f $PACKAGE_ROOT/docker/Dockerfile.test
+}
+trap cleanup EXIT
+
+cat << EOF > $HERE/Dockerfile.worker
+FROM $TAG_SHA
+## TODO: enable worker endpoint when function available
+## ENTRYPOINT ["/usr/local/bin/hintr_worker"]
+EOF
+
+cat << EOF > $HERE/Dockerfile.test
+FROM $TAG_SHA
+
+RUN install_packages --repo=https://mrc-ide.github.io/drat \
+        mockery \
+        covr \
+        ssh
+RUN install_remote \
+        ropensci/jsonvalidate
+WORKDIR /src
+RUN R CMD build .
+ENTRYPOINT ["/bin/bash"]
+EOF
+
+rm -rf naomi
+git clone https://github.com/mrc-ide/naomi
+if [ -z $NAOMI_SHA ]; then
+    git -C $PACKAGE_ROOT/naomi checkout $NAOMI_SHA
+fi
+
+docker build --pull \
+       -t $TAG_SHA \
+       -f docker/Dockerfile \
+       $PACKAGE_ROOT
+
+docker build \
+       -t $TAG_WORKER_SHA \
+       -f docker/Dockerfile.worker \
+       $PACKAGE_ROOT
+
+docker build \
+      -t hintr_tests:${GIT_SHA} \
+      -f docker/Dockerfile.test \
+      $PACKAGE_ROOT
+
+# We always push the SHA tagged versions, for debugging if the tests
+# after this step fail
+docker push $TAG_SHA
+docker push $TAG_WORKER_SHA

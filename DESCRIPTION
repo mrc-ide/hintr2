@@ -1,0 +1,18 @@
+Package: hintr2
+Title: Reimplementation of hintr using pkgapi
+Version: 0.0.1
+Authors@R: 
+    person(given = "Robert",
+           family = "Ashton",
+           role = c("aut", "cre"),
+           email = "r.ashton@imperial.ac.uk")
+Description: R API for calling naomi district level HIV model.
+Depends: R (>= 3.5.0)
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.0.2
+Additional_repositories: https://mrc-ide.github.io/drat
+Suggests:
+    testthat
