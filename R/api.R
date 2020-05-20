@@ -29,7 +29,7 @@ endpoint_baseline_individual <- function() {
   response <- pkgapi::pkgapi_returning_json("ValidateInputResponse.schema",
                                             schema_root())
   pkgapi::pkgapi_endpoint$new("POST",
-                              "validate/baseline-individual",
+                              "/validate/baseline-individual",
                               validate_baseline,
                               input,
                               returning = response,
