@@ -14,3 +14,16 @@ test_that("endpoint_baseline_individual", {
   class(null) <- "logical"
   expect_equal(response$data$filters, scalar(null))
 })
+
+test_that("endpoint_baseline_individual works", {
+  api <- api_build()
+  res <- api$request("POST", "/validate/baseline-individual",
+                     body = readLines("payload/validate_pjnz_payload.json"))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$data$hash, "12345")
+  expect_equal(body$data$data$country, "Malawi")
+  expect_equal(body$data$data$iso3, "MWI")
+  expect_equal(body$data$filename, "Malawi2019.PJNZ")
+  expect_equal(body$data$filters, NULL)
+})
