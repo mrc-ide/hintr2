@@ -10,9 +10,7 @@ test_that("endpoint_baseline_individual", {
   expect_equal(response$data$data$country, scalar("Malawi"))
   expect_equal(response$data$data$iso3, scalar("MWI"))
   expect_equal(response$data$filename, scalar("Malawi2019.PJNZ"))
-  null <- "null"
-  class(null) <- "logical"
-  expect_equal(response$data$filters, scalar(null))
+  expect_equal(response$data$filters, json_null())
 })
 
 test_that("endpoint_baseline_individual works", {

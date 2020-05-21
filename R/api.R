@@ -5,6 +5,17 @@ api_build <- function() {
   api
 }
 
+#' Build and start the API
+#'
+#' @param port Port for API
+#' @param queue_id ID of an existing queue to connect to, creates a new one
+#' if NULL
+#' @param workers Number of workers to spawn
+#' @param results_dir The dir for results to be saved to
+#' @param prerun_dir The directory to store prerun results
+#'
+#' @return Running API
+#' @export
 api <- function(port = 8888, queue_id = NULL, workers = 2,
                 results_dir = tempdir(), prerun_dir = NULL) {
   # nocov start

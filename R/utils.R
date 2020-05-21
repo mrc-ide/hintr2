@@ -9,3 +9,9 @@ schema_root <- function() {
 scalar <- function(val) {
   jsonlite::unbox(val)
 }
+
+json_null <- function() {
+  null <- "null"
+  class(null) <- "logical"
+  scalar(null)
+}
