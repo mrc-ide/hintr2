@@ -49,3 +49,24 @@ test_that("api can call endpoint_model_submit", {
   expect_null(body$errors)
   expect_true(!is.null(body$data$id))
 })
+
+test_that("endpoint_plotting_metadata can be run", {
+  endpoint <- endpoint_plotting_metadata()
+  response <- endpoint$run("MWI")
+
+  expect_equal(response$status_code, 200)
+  expect_null(response$error)
+  expect_true(all(names(response$data) %in%
+                    c("survey", "anc", "output", "programme")))
+})
+
+test_that("api can call endpoint_plotting_metadata", {
+  api <- api_build()
+  res <- api$request("POST", "/meta/plotting/MWI")
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_null(body$errors)
+  expect_true(all(names(body$data) %in%
+                    c("survey", "anc", "output", "programme")))
+})

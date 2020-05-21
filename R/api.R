@@ -3,6 +3,7 @@ api_build <- function(queue) {
   api$handle(endpoint_root())
   api$handle(endpoint_baseline_individual())
   api$handle(endpoint_model_submit(queue))
+  api$handle(endpoint_plotting_metadata())
   api
 }
 
@@ -60,6 +61,16 @@ endpoint_model_submit <- function(queue) {
                               "/model/submit",
                               submit_model(queue),
                               input,
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_plotting_metadata <- function() {
+  response <- pkgapi::pkgapi_returning_json("PlottingMetadataResponse.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/meta/plotting/<iso3>",
+                              plotting_metadata,
                               returning = response,
                               validate = TRUE)
 }

@@ -34,3 +34,12 @@ submit_model <- function(queue) {
     )
   }
 }
+
+plotting_metadata <- function(iso3) {
+  tryCatch(
+    hintr:::do_plotting_metadata(iso3),
+    error = function(e) {
+      pkgapi::pkgapi_stop("FAILED_TO_GET_METADATA", e$message)
+    }
+  )
+}
