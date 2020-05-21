@@ -25,3 +25,27 @@ test_that("endpoint_baseline_individual works", {
   expect_equal(body$data$filename, "Malawi2019.PJNZ")
   expect_equal(body$data$filters, NULL)
 })
+
+test_that("endpoint_model_submit can be run", {
+  queue <- hintr:::Queue$new()
+  endpoint <- endpoint_model_submit(queue)
+  path <- setup_submit_payload()
+  response <- endpoint$run(readLines(path))
+
+  expect_equal(response$status_code, 200)
+  expect_null(response$error)
+  expect_true(!is.null(response$data$id))
+})
+
+test_that("api can call endpoint_model_submit", {
+  queue <- hintr:::Queue$new()
+  api <- api_build(queue)
+  path <- setup_submit_payload()
+  res <- api$request("POST", "/model/submit",
+                     body = readLines(path))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_null(body$errors)
+  expect_true(!is.null(body$data$id))
+})

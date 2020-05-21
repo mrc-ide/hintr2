@@ -1,7 +1,8 @@
-api_build <- function() {
+api_build <- function(queue) {
   api <- pkgapi::pkgapi$new()
   api$handle(endpoint_root())
   api$handle(endpoint_baseline_individual())
+  api$handle(endpoint_model_submit(queue))
   api
 }
 
@@ -19,8 +20,10 @@ api_build <- function() {
 api <- function(port = 8888, queue_id = NULL, workers = 2,
                 results_dir = tempdir(), prerun_dir = NULL) {
   # nocov start
-  api <- api_build()
-  api$run(port = port, swagger = FALSE)
+  queue <- hintr:::Queue$new(queue_id, workers, results_dir = results_dir,
+                             prerun_dir = prerun_dir)
+  api <- api_build(queue)
+  api$run(port = port)
   # nocov end
 }
 
@@ -42,6 +45,20 @@ endpoint_baseline_individual <- function() {
   pkgapi::pkgapi_endpoint$new("POST",
                               "/validate/baseline-individual",
                               validate_baseline,
+                              input,
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_model_submit <- function(queue) {
+  input <- pkgapi::pkgapi_input_body_json("input",
+                                          "ModelSubmitRequest.schema",
+                                          schema_root())
+  response <- pkgapi::pkgapi_returning_json("ModelSubmitResponse.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/model/submit",
+                              submit_model(queue),
                               input,
                               returning = response,
                               validate = TRUE)

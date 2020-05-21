@@ -19,3 +19,18 @@ validate_baseline <- function(input) {
 root_endpoint <- function() {
   scalar("Welcome")
 }
+
+submit_model <- function(queue) {
+  submit <- function(input) {
+    input <- jsonlite::fromJSON(input)
+    if (!hintr:::is_current_version(input$version)) {
+      pkgapi::pkgapi_stop("MODEL_SUBMIT_OLD", "VERSION_OUT_OF_DATE")
+    }
+    tryCatch(
+      list(id = scalar(queue$submit(input$data, input$options))),
+      error = function(e) {
+        pkgapi::pkgapi_stop(e$message, "FAILED_TO_QUEUE")
+      }
+    )
+  }
+}
