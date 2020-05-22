@@ -9,12 +9,18 @@ COPY docker/bin /usr/local/bin/
 RUN sed  -i'' '/mran.microsoft.com/d' /usr/local/lib/R/etc/Rprofile.site
 
 RUN install_packages --repo=https://mrc-ide.github.io/drat \
-    hintr \
     jsonlite \
     knitr \
     mockery \
     rmarkdown \
     testthat
+
+RUN install_remote \
+    mrc-ide/eppasm \
+    mrc-ide/rrq \
+    mrc-ide/hintr \
+    reside-ic/traduire \
+    reside-ic/pkgapi
 
 COPY . /src
 RUN R CMD INSTALL /src
