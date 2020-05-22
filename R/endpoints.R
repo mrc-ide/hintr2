@@ -21,7 +21,7 @@ root_endpoint <- function() {
 }
 
 submit_model <- function(queue) {
-  submit <- function(input) {
+  function(input) {
     input <- jsonlite::fromJSON(input)
     if (!hintr:::is_current_version(input$version)) {
       pkgapi::pkgapi_stop("MODEL_SUBMIT_OLD", "VERSION_OUT_OF_DATE")
@@ -32,6 +32,20 @@ submit_model <- function(queue) {
         pkgapi::pkgapi_stop(e$message, "FAILED_TO_QUEUE")
       }
     )
+  }
+}
+
+model_status <- function(queue) {
+  check_orphan <- hintr:::throttle(queue$queue$worker_detect_exited, 10)
+  function(id) {
+    hintr:::no_error(check_orphan())
+    tryCatch({
+      out <- queue$status(id)
+      hintr:::prepare_status_response(out, id)
+    },
+    error = function(e) {
+      pkgapi::pkgapi_stop(e$message, "FAILED_TO_RETRIEVE_STATUS")
+    })
   }
 }
 

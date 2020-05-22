@@ -130,5 +130,5 @@ test_that("endpoint_validate_baseline supports population file", {
 
   expect_equal(response$filename, scalar("original"))
   expect_equal(response$hash, scalar("12345"))
-  expect_equal(response$data, json_null())
+  expect_equal(response$data, scalar_null())
 })

@@ -3,6 +3,7 @@ api_build <- function(queue) {
   api$handle(endpoint_root())
   api$handle(endpoint_baseline_individual())
   api$handle(endpoint_model_submit(queue))
+  api$handle(endpoint_model_status(queue))
   api$handle(endpoint_plotting_metadata())
   api$handle(endpoint_download_spectrum(queue))
   api$handle(endpoint_download_summary(queue))
@@ -63,6 +64,16 @@ endpoint_model_submit <- function(queue) {
                               "/model/submit",
                               submit_model(queue),
                               input,
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_model_status <- function(queue) {
+  response <- pkgapi::pkgapi_returning_json("ModelStatusResponse.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("GET",
+                              "/model/status/<id>",
+                              model_status(queue),
                               returning = response,
                               validate = TRUE)
 }
