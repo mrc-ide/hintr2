@@ -132,6 +132,7 @@ test_that("api can call endpoint_plotting_metadata", {
 #   test_redis_available()
 #   test_mock_model_available()
 #
+#   queue <- hintr:::Queue$new()
 #   run_endpoint <- endpoint_model_submit(queue)
 #   path <- setup_submit_payload()
 #   run_response <- run_endpoint$run(readLines(path))

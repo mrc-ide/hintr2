@@ -91,13 +91,13 @@ endpoint_plotting_metadata <- function() {
 endpoint_download_spectrum <- function(queue) {
   pkgapi::pkgapi_endpoint$new("GET",
                               "/download/spectrum/<id>",
-                              download_spectrum,
+                              download_spectrum(queue),
                               returning = pkgapi::pkgapi_returning_binary())
 }
 
 endpoint_download_summary <- function(queue) {
   pkgapi::pkgapi_endpoint$new("GET",
                               "/download/summary/<id>",
-                              download_summary,
+                              download_summary(queue),
                               returning = pkgapi::pkgapi_returning_binary())
 }
