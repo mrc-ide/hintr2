@@ -12,6 +12,7 @@ RUN install_packages --repo=https://mrc-ide.github.io/drat \
     jsonlite \
     knitr \
     mockery \
+    remotes \
     rmarkdown \
     testthat
 
