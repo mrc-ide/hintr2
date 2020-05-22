@@ -43,3 +43,39 @@ plotting_metadata <- function(iso3) {
     }
   )
 }
+
+download_spectrum <- function(queue) {
+  download(queue, "spectrum")
+}
+
+download_summary <- function(queue) {
+  download(queue, "summary")
+}
+
+download <- function(queue, type) {
+  function(id) {
+    tryCatch({
+      res <- queue$result(id)
+      if (hintr:::is_error(res)) {
+        pkgapi::pkgapi_stop(res$message, "MODEL_RUN_FAILED")
+      }
+      path <- switch(type,
+                     "spectrum" = res$spectrum_path,
+                     "summary" = res$summary_path)
+      list(
+        bytes = readBin(path, "raw", n = file.size(path)),
+        id = id,
+        metadata = response$metadata
+      )
+    },
+    error = function(e) {
+      if (is_pkgapi_error(e)) {
+        stop(e)
+      } else {
+        pkgapi::pkgapi_stop(e$message, "FAILED_TO_RETRIEVE_RESULT")
+      }
+    })
+  }
+}
+
+

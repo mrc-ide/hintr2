@@ -15,3 +15,7 @@ json_null <- function() {
   class(null) <- "logical"
   scalar(null)
 }
+
+is_pkgapi_error <- function(e) {
+  inherits(e, "pkgapi_error")
+}

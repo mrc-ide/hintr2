@@ -4,6 +4,8 @@ api_build <- function(queue) {
   api$handle(endpoint_baseline_individual())
   api$handle(endpoint_model_submit(queue))
   api$handle(endpoint_plotting_metadata())
+  api$handle(endpoint_download_spectrum(queue))
+  api$handle(endpoint_download_summary(queue))
   api
 }
 
@@ -68,9 +70,23 @@ endpoint_model_submit <- function(queue) {
 endpoint_plotting_metadata <- function() {
   response <- pkgapi::pkgapi_returning_json("PlottingMetadataResponse.schema",
                                             schema_root())
-  pkgapi::pkgapi_endpoint$new("POST",
+  pkgapi::pkgapi_endpoint$new("GET",
                               "/meta/plotting/<iso3>",
                               plotting_metadata,
                               returning = response,
                               validate = TRUE)
+}
+
+endpoint_download_spectrum <- function(queue) {
+  pkgapi::pkgapi_endpoint$new("GET",
+                              "/download/spectrum/<id>",
+                              download_spectrum,
+                              returning = pkgapi::pkgapi_returning_binary())
+}
+
+endpoint_download_summary <- function(queue) {
+  pkgapi::pkgapi_endpoint$new("GET",
+                              "/download/summary/<id>",
+                              download_summary,
+                              returning = pkgapi::pkgapi_returning_binary())
 }
