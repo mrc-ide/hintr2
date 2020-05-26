@@ -1,6 +1,7 @@
 FROM rocker/r-ver:3.6.0
 
 RUN apt-get update && apt-get -y install \
+        libxml2-dev \
         texinfo \
         texlive \
         texlive-fonts-extra
