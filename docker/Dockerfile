@@ -4,6 +4,7 @@ RUN apt-get update && apt-get -y install \
         libcurl4-openssl-dev \
         libhiredis-dev \
         libssl-dev \
+        libv8-dev \
         libxml2-dev \
         texinfo \
         texlive \
