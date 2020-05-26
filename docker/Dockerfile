@@ -22,6 +22,7 @@ RUN install_packages --repo=https://mrc-ide.github.io/drat \
 RUN install_remote \
     mrc-ide/eppasm \
     mrc-ide/rrq \
+    mrc-ide/naomi \
     mrc-ide/hintr \
     reside-ic/traduire \
     reside-ic/pkgapi
