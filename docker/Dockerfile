@@ -1,6 +1,7 @@
 FROM rocker/r-ver:3.6.0
 
 RUN apt-get update && apt-get -y install \
+        libcurl4-openssl-dev \
         libhiredis-dev \
         libssl-dev \
         libxml2-dev \
