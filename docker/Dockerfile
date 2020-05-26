@@ -1,6 +1,7 @@
 FROM rocker/r-ver:3.6.0
 
 RUN apt-get update && apt-get -y install \
+        libhiredis-dev \
         libxml2-dev \
         texinfo \
         texlive \
