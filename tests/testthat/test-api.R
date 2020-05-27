@@ -119,7 +119,7 @@ test_that("endpoint_plotting_metadata can be run", {
 
 test_that("api can call endpoint_plotting_metadata", {
   api <- api_build()
-  res <- api$request("POST", "/meta/plotting/MWI")
+  res <- api$request("GET", "/meta/plotting/MWI")
   expect_equal(res$status, 200)
   body <- jsonlite::fromJSON(res$body)
   expect_equal(body$status, "success")
