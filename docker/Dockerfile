@@ -33,7 +33,8 @@ RUN install_remote \
     mrc-ide/naomi \
     mrc-ide/hintr \
     reside-ic/traduire \
-    reside-ic/pkgapi
+    reside-ic/pkgapi \
+    ropensci/jsonvalidate
 
 COPY . /src
 RUN R CMD INSTALL /src
