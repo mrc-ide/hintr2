@@ -2,10 +2,15 @@ FROM rocker/r-ver:3.6.0
 
 RUN apt-get update && apt-get -y install \
         libcurl4-openssl-dev \
+        libgdal-dev \
         libhiredis-dev \
+        libjq-dev \
+        libprotobuf-dev \
         libssl-dev \
+        libudunits2-dev \
         libv8-dev \
         libxml2-dev \
+        protobuf-compiler \
         texinfo \
         texlive \
         texlive-fonts-extra
@@ -19,6 +24,7 @@ RUN install_packages --repo=https://mrc-ide.github.io/drat \
     mockery \
     remotes \
     rmarkdown \
+    sf \
     testthat
 
 RUN install_remote \
