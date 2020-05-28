@@ -62,9 +62,7 @@ test_that("endpoint_model_status can be run", {
   expect_true(!is.null(run_response$data$id))
 
   endpoint <- endpoint_model_status(queue)
-  id <- run_response$data$id
-  class(id) <- NULL
-  response <- endpoint$run(id)
+  response <- endpoint$run(run_response$data$id)
   expect_equal(response$status_code, 200)
   expect_equal(response$data$id, run_response$data$id)
   expect_equal(response$data$done, scalar(TRUE))

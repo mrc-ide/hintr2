@@ -15,14 +15,10 @@ test_that("endpoint model run queues a model run", {
 
   ## Wait for complete and query for status
   ## Query for status
-  ## Calling model_status endpoint with classed ID applies scalar class to it
-  ## twice
-  id <- response$id
-  class(id) <- NULL
   testthat::try_again(5, {
     result <- queue$queue$task_wait(response$id)
     status_endpoint <- model_status(queue)
-    status <- status_endpoint(id)
+    status <- status_endpoint(response$id)
     expect_equal(status$id, response$id)
     expect_equal(status$done, scalar(TRUE))
     expect_equal(status$status, scalar("COMPLETE"))
@@ -208,10 +204,8 @@ test_that("erroring model run returns useful messages", {
   expect_true("id" %in% names(response))
 
   ## Get the status
-  id <- response$id
-  class(id) <- NULL
   endpoint_status <- model_status(queue)
-  status <- endpoint_status(id)
+  status <- endpoint_status(response$id)
   expect_equal(status$done, scalar(TRUE))
   expect_equal(status$status, scalar("ERROR"))
   expect_equal(status$success, scalar(FALSE))
