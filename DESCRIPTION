@@ -18,7 +18,7 @@ Imports:
     hintr,
     jsonlite,
     pkgapi,
-    traduire
+    traduire (>= 0.0.5)
 Suggests:
     mockery,
     R6,

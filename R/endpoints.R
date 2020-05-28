@@ -24,7 +24,8 @@ submit_model <- function(queue) {
   function(input) {
     input <- jsonlite::fromJSON(input)
     if (!hintr:::is_current_version(input$version)) {
-      pkgapi::pkgapi_stop("MODEL_SUBMIT_OLD", "VERSION_OUT_OF_DATE")
+      pkgapi::pkgapi_stop(t_("MODEL_SUBMIT_OLD", package = "hintr"),
+                          "VERSION_OUT_OF_DATE")
     }
     tryCatch(
       list(id = scalar(queue$submit(input$data, input$options))),

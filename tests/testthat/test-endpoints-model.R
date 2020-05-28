@@ -161,7 +161,8 @@ test_that("running model with old version throws an error", {
   error <- expect_error(model_submit(readLines(path)))
 
   expect_equal(error$data[[1]]$error, scalar("VERSION_OUT_OF_DATE"))
-  expect_equal(error$data[[1]]$detail, scalar("MODEL_SUBMIT_OLD"))
+  expect_equal(error$data[[1]]$detail, scalar(paste0("Trying to run model with",
+    " old version of options. Update model run options")))
   expect_equal(error$status, 400)
 })
 
