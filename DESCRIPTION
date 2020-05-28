@@ -17,7 +17,7 @@ Additional_repositories: https://mrc-ide.github.io/drat
 Imports:
     hintr,
     jsonlite,
-    pkgapi,
+    pkgapi (>= 0.0.8),
     traduire (>= 0.0.5)
 Suggests:
     mockery,
