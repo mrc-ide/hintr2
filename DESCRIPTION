@@ -15,7 +15,7 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.0.2
 Additional_repositories: https://mrc-ide.github.io/drat
 Imports:
-    hintr,
+    hintr (>= 0.0.35),
     jsonlite,
     pkgapi (>= 0.0.8),
     traduire (>= 0.0.5)

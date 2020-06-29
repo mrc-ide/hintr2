@@ -13,15 +13,13 @@ test_that("indicator download returns bytes", {
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
 
-  testthat::try_again(4, {
-    Sys.sleep(2)
-    summary <- download_summary(queue)
-    download <- summary(response$id)
-    expect_type(download$bytes, "raw")
-    expect_length(download$bytes, file.size(
-      system.file("output", "malawi_summary_download.zip", package = "hintr")))
-    expect_equal(download$id, response$id)
-  })
+  out <- queue$queue$task_wait(response$id)
+  summary <- download_summary(queue)
+  download <- summary(response$id)
+  expect_type(download$bytes, "raw")
+  expect_length(download$bytes, file.size(
+    system.file("output", "malawi_summary_download.zip", package = "hintr")))
+  expect_equal(download$id, response$id)
 })
 
 test_that("spectrum download returns bytes", {
@@ -37,15 +35,13 @@ test_that("spectrum download returns bytes", {
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
 
-  testthat::try_again(4, {
-    Sys.sleep(2)
-    spectrum <- download_spectrum(queue)
-    download <- spectrum(response$id)
-    expect_type(download$bytes, "raw")
-    expect_length(download$bytes, file.size(
-      system.file("output", "malawi_spectrum_download.zip", package = "hintr")))
-    expect_equal(download$id, response$id)
-  })
+  out <- queue$queue$task_wait(response$id)
+  spectrum <- download_spectrum(queue)
+  download <- spectrum(response$id)
+  expect_type(download$bytes, "raw")
+  expect_length(download$bytes, file.size(
+    system.file("output", "malawi_spectrum_download.zip", package = "hintr")))
+  expect_equal(download$id, response$id)
 })
 
 test_that("download returns useful error if model run fails", {
@@ -66,15 +62,13 @@ test_that("download returns useful error if model run fails", {
     expect_true("id" %in% names(response))
   })
 
-  testthat::try_again(4, {
-    Sys.sleep(1)
-    spectrum <- download_spectrum(queue)
-    error <- expect_error(spectrum(response$id))
-    expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
-    expect_match(error$data[[1]]$detail,
-                 scalar("Required model options not supplied:.+"))
-    expect_equal(error$status_code, 400)
-  })
+  out <- queue$queue$task_wait(response$id)
+  spectrum <- download_spectrum(queue)
+  error <- expect_error(spectrum(response$id))
+  expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
+  expect_match(error$data[[1]]$detail,
+               scalar("Required model options not supplied:.+"))
+  expect_equal(error$status_code, 400)
 })
 
 test_that("download returns useful error if model result can't be retrieved", {

@@ -15,22 +15,19 @@ test_that("endpoint model run queues a model run", {
 
   ## Wait for complete and query for status
   ## Query for status
-  testthat::try_again(5, {
-    result <- queue$queue$task_wait(response$id)
-    status_endpoint <- model_status(queue)
-    status <- status_endpoint(response$id)
-    expect_equal(status$id, response$id)
-    expect_equal(status$done, scalar(TRUE))
-    expect_equal(status$status, scalar("COMPLETE"))
-    expect_equal(status$queue, scalar(0))
-    expect_equal(status$success, scalar(TRUE))
-    expect_length(status$progress, 2)
-    expect_equal(status$progress[[1]]$name, scalar("Started mock model"))
-    expect_true(status$progress[[1]]$complete)
-    expect_equal(status$progress[[2]]$name, scalar("Finished mock model"))
-    expect_false(status$progress[[2]]$complete)
-    Sys.sleep(2)
-  })
+  result <- queue$queue$task_wait(response$id)
+  status_endpoint <- model_status(queue)
+  status <- status_endpoint(response$id)
+  expect_equal(status$id, response$id)
+  expect_equal(status$done, scalar(TRUE))
+  expect_equal(status$status, scalar("COMPLETE"))
+  expect_equal(status$queue, scalar(0))
+  expect_equal(status$success, scalar(TRUE))
+  expect_length(status$progress, 2)
+  expect_equal(status$progress[[1]]$name, scalar("Started mock model"))
+  expect_true(status$progress[[1]]$complete)
+  expect_equal(status$progress[[2]]$name, scalar("Finished mock model"))
+  expect_false(status$progress[[2]]$complete)
 
   # ## Get the result
   # res <- MockPlumberResponse$new()

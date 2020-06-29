@@ -80,7 +80,7 @@ download <- function(queue, type) {
       list(
         bytes = readBin(path, "raw", n = file.size(path)),
         id = id,
-        metadata = response$metadata
+        metadata = res$metadata
       )
     },
     error = function(e) {
