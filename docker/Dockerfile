@@ -22,6 +22,7 @@ COPY docker/bin /usr/local/bin/
 RUN install_remote \
         mrc-ide/heartbeatr \
         mrc-ide/rrq \
+        mrc-ide/naomi \
         mrc-ide/hintr@update-scalar \
         reside-ic/traduire \
         reside-ic/pkgapi
