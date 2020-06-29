@@ -23,9 +23,10 @@ RUN install_remote \
         mrc-ide/heartbeatr \
         mrc-ide/rrq \
         mrc-ide/naomi \
-        mrc-ide/hintr@update-scalar \
         reside-ic/traduire \
         reside-ic/pkgapi
 
 COPY . /src
+RUN cd /src/hintr && ./scripts/build_test_data
+RUN R CMD INSTALL /src/hintr
 RUN R CMD INSTALL /src
