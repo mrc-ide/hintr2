@@ -62,6 +62,7 @@ test_that("endpoint_model_status can be run", {
   expect_true(!is.null(run_response$data$id))
 
   endpoint <- endpoint_model_status(queue)
+  out <- queue$queue$task_wait(run_response$data$id)
   response <- endpoint$run(run_response$data$id)
   expect_equal(response$status_code, 200)
   expect_equal(response$data$id, run_response$data$id)
@@ -88,6 +89,7 @@ test_that("api can call endpoint_model_status", {
   expect_equal(body$status, "success")
   expect_true(!is.null(body$data$id))
 
+  out <- queue$queue$task_wait(body$data$id)
   res <- api$request("GET", sprintf("/model/status/%s", body$data$id))
   expect_equal(res$status, 200)
   body <- jsonlite::fromJSON(res$body)
