@@ -54,6 +54,7 @@ test_that("api can call endpoint_model_submit", {
 
 test_that("endpoint_model_status can be run", {
   test_redis_available()
+  test_mock_model_available()
   queue <- hintr:::Queue$new()
   model_run <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
@@ -79,6 +80,7 @@ test_that("endpoint_model_status can be run", {
 
 test_that("api can call endpoint_model_status", {
   test_redis_available()
+  test_mock_model_available()
   queue <- hintr:::Queue$new()
   api <- api_build(queue)
   path <- setup_submit_payload()
