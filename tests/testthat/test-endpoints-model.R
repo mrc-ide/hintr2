@@ -200,6 +200,7 @@ test_that("erroring model run returns useful messages", {
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
+  out <- queue$queue$task_wait(response$id)
 
   ## Get the status
   endpoint_status <- model_status(queue)
