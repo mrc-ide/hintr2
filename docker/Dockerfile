@@ -1,40 +1,28 @@
-FROM rocker/r-ver:3.6.0
+FROM mrcide/naomi-base:latest
 
-RUN apt-get update && apt-get -y install \
-        libcurl4-openssl-dev \
-        libgdal-dev \
+RUN apt-get update && apt-get -y install --no-install-recommends \
         libhiredis-dev \
         libjq-dev \
-        libprotobuf-dev \
-        libssl-dev \
-        libudunits2-dev \
-        libv8-dev \
-        libxml2-dev \
-        protobuf-compiler \
-        texinfo \
-        texlive \
-        texlive-fonts-extra
-
-COPY docker/bin /usr/local/bin/
-RUN sed  -i'' '/mran.microsoft.com/d' /usr/local/lib/R/etc/Rprofile.site
+        && apt-get clean \
+        && rm -rf /var/lib/apt/lists/*
 
 RUN install_packages --repo=https://mrc-ide.github.io/drat \
-    jsonlite \
-    knitr \
-    mockery \
-    remotes \
-    rmarkdown \
-    sf \
-    testthat
+        docopt \
+        geojsonio \
+        glue \
+        jsonlite \
+        methods \
+        plumber \
+        ps \
+        remotes \
+        rlang
+
+COPY docker/bin /usr/local/bin/
 
 RUN install_remote \
-    mrc-ide/eppasm \
-    mrc-ide/rrq \
-    mrc-ide/naomi \
-    mrc-ide/hintr \
-    reside-ic/traduire \
-    reside-ic/pkgapi \
-    ropensci/jsonvalidate
+        mrc-ide/heartbeatr \
+        mrc-ide/rrq \
+        reside-ic/traduire
 
 COPY . /src
 RUN R CMD INSTALL /src
