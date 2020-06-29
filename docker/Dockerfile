@@ -22,7 +22,9 @@ COPY docker/bin /usr/local/bin/
 RUN install_remote \
         mrc-ide/heartbeatr \
         mrc-ide/rrq \
-        reside-ic/traduire
+        mrc-ide/hintr \
+        reside-ic/traduire \
+        reside-ic/pkgapi
 
 COPY . /src
 RUN R CMD INSTALL /src
