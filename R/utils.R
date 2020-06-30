@@ -7,7 +7,7 @@ schema_root <- function() {
 }
 
 scalar <- function(val) {
-  if ("scalar" %in% class(val)) {
+  if (inherits(val, "scalar")) {
     val
   } else {
     jsonlite::unbox(val)
