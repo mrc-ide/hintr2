@@ -5,8 +5,10 @@ api_build <- function(queue) {
   api$handle(endpoint_model_submit(queue))
   api$handle(endpoint_model_status(queue))
   api$handle(endpoint_plotting_metadata())
-  api$handle(endpoint_download_spectrum(queue))
-  api$handle(endpoint_download_summary(queue))
+  api$handle(endpoint_download_spectrum(queue, "GET"))
+  api$handle(endpoint_download_spectrum(queue, "HEAD"))
+  api$handle(endpoint_download_summary(queue, "GET"))
+  api$handle(endpoint_download_summary(queue, "HEAD"))
   api
 }
 
@@ -88,15 +90,15 @@ endpoint_plotting_metadata <- function() {
                               validate = TRUE)
 }
 
-endpoint_download_spectrum <- function(queue) {
-  pkgapi::pkgapi_endpoint$new("GET",
+endpoint_download_spectrum <- function(queue, method) {
+  pkgapi::pkgapi_endpoint$new(method,
                               "/download/spectrum/<id>",
                               download_spectrum(queue),
                               returning = pkgapi::pkgapi_returning_binary())
 }
 
-endpoint_download_summary <- function(queue) {
-  pkgapi::pkgapi_endpoint$new("GET",
+endpoint_download_summary <- function(queue, method) {
+  pkgapi::pkgapi_endpoint$new(method,
                               "/download/summary/<id>",
                               download_summary(queue),
                               returning = pkgapi::pkgapi_returning_binary())
