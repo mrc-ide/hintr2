@@ -203,7 +203,6 @@ test_that("api can call endpoint_download_spectrum", {
   expect_match(
     res$headers$`Content-Disposition`,
     'attachment; filename="MWI_\\d+-\\d+_naomi_spectrum_digest.zip"')
-  expect_null(res$body)
 })
 
 test_that("endpoint_download_summary can be run", {
@@ -282,5 +281,4 @@ test_that("api can call endpoint_download_summary", {
   expect_match(
     res$headers$`Content-Disposition`,
     'attachment; filename="MWI_\\d+-\\d+_naomi_coarse_age_groups.zip"')
-  expect_null(res$body)
 })
