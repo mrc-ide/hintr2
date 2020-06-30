@@ -24,7 +24,8 @@ RUN install_remote \
         mrc-ide/rrq \
         mrc-ide/naomi \
         reside-ic/traduire \
-        reside-ic/pkgapi
+        reside-ic/pkgapi \
+        reside-ic/jsonvalidate
 
 COPY . /src
 RUN cd /src/hintr && ./scripts/build_test_data
