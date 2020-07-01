@@ -39,6 +39,24 @@ validate_baseline_combined <- function(input) {
   })
 }
 
+validate_survey_programme <- function(input) {
+  input <- jsonlite::fromJSON(input)
+  validate_func <- switch(input$type,
+                          programme = hintr:::do_validate_programme,
+                          anc = hintr:::do_validate_anc,
+                          survey = hintr:::do_validate_survey)
+  tryCatch({
+    shape <- hintr:::file_object(input$shape)
+    hintr:::assert_file_exists(input$file$path)
+    hintr:::assert_file_exists(shape$path)
+    hintr:::input_response(validate_func(input$file, shape),
+                           input$type, input$file)
+  },
+  error = function(e) {
+    pkgapi::pkgapi_stop(e$message, "INVALID_FILE")
+  })
+}
+
 submit_model <- function(queue) {
   function(input) {
     input <- jsonlite::fromJSON(input)

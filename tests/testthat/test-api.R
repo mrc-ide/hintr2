@@ -37,13 +37,100 @@ test_that("endpoint_baseline_combined", {
 
 test_that("endpoint_baseline_combined works", {
   api <- api_build()
-  res <- api$request("POST", "/validate/baseline-combined",
+  res <- api$request("POST", "/validate/survey-and-programme",
                      body = readLines("payload/validate_baseline_payload.json"))
   expect_equal(res$status, 200)
   body <- jsonlite::fromJSON(res$body)
   expect_equal(body$status, "success")
   expect_null(body$errors)
   expect_true(body$data$consistent)
+})
+
+test_that("endpoint_validate_survey_programme programme", {
+  endpoint <- endpoint_validate_survey_programme()
+  response <- endpoint$run(readLines("payload/validate_programme_payload.json"))
+
+  expect_equal(response$status_code, 200)
+  expect_null(response$error)
+  expect_equal(response$data$filename, scalar("original.csv"))
+  expect_equal(response$data$hash, scalar("12345"))
+  ## Sanity check that data has been returned
+  expect_true(nrow(response$data$data) >= 200)
+  expect_equal(typeof(response$data$data[, "current_art"]), "double")
+})
+
+test_that("endpoint_validate_survey_programme works with programme data", {
+  api <- api_build()
+  res <- api$request("POST", "/validate/survey-and-programme",
+                     body =
+                       readLines("payload/validate_programme_payload.json"))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_null(body$errors)
+  expect_equal(body$data$filename, "original.csv")
+  expect_equal(body$data$hash, "12345")
+  ## Sanity check that data has been returned
+  expect_true(nrow(body$data$data) >= 200)
+  expect_equal(typeof(body$data$data[, "current_art"]), "double")
+})
+
+test_that("endpoint_validate_survey_programme anc", {
+  endpoint <- endpoint_validate_survey_programme()
+  response <- endpoint$run(readLines("payload/validate_anc_payload.json"))
+
+  expect_equal(response$status_code, 200)
+  expect_null(response$error)
+  expect_equal(response$data$filename, scalar("original.csv"))
+  expect_equal(response$data$hash, scalar("12345"))
+  ## Sanity check that data has been returned
+  expect_true(nrow(response$data$data) >= 200)
+  expect_equal(typeof(response$data$data[, "prevalence"]), "double")
+  expect_equal(typeof(response$data$data[, "art_coverage"]), "double")
+})
+
+test_that("endpoint_validate_survey_programme works with anc data", {
+  api <- api_build()
+  res <- api$request("POST", "/validate/survey-and-programme",
+                     body = readLines("payload/validate_anc_payload.json"))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_null(body$errors)
+  expect_equal(body$data$filename, "original.csv")
+  expect_equal(body$data$hash, "12345")
+  ## Sanity check that data has been returned
+  expect_true(nrow(body$data$data) >= 200)
+  expect_equal(typeof(body$data$data[, "prevalence"]), "double")
+  expect_equal(typeof(body$data$data[, "art_coverage"]), "double")
+})
+
+test_that("endpoint_validate_survey_programme survey", {
+  endpoint <- endpoint_validate_survey_programme()
+  response <- endpoint$run(readLines("payload/validate_survey_payload.json"))
+
+  expect_equal(response$status_code, 200)
+  expect_null(response$error)
+  expect_equal(response$data$filename, scalar("original.csv"))
+  expect_equal(response$data$hash, scalar("12345"))
+  ## Sanity check that data has been returned
+  expect_true(nrow(response$data$data) >= 20000)
+  expect_equal(typeof(response$data$data[, "est"]), "double")
+})
+
+test_that("endpoint_validate_survey_programme works with survey data", {
+  api <- api_build()
+  res <- api$request("POST", "/validate/survey-and-programme",
+                     body = readLines("payload/validate_survey_payload.json"))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_null(body$errors)
+  expect_equal(body$data$filename, "original.csv")
+  expect_equal(body$data$hash, "12345")
+  ## Sanity check that data has been returned
+  expect_true(nrow(body$data$data) >= 20000)
+  expect_equal(typeof(body$data$data[, "est"]), "double")
 })
 
 test_that("endpoint_model_submit can be run", {
