@@ -26,6 +26,26 @@ test_that("endpoint_baseline_individual works", {
   expect_equal(body$data$filters, NULL)
 })
 
+test_that("endpoint_baseline_combined", {
+  endpoint <- endpoint_baseline_combined()
+  response <- endpoint$run(readLines("payload/validate_baseline_payload.json"))
+
+  expect_equal(response$status_code, 200)
+  expect_null(response$error)
+  expect_equal(response$data$consistent, scalar(TRUE))
+})
+
+test_that("endpoint_baseline_combined works", {
+  api <- api_build()
+  res <- api$request("POST", "/validate/baseline-combined",
+                     body = readLines("payload/validate_baseline_payload.json"))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_null(body$errors)
+  expect_true(body$data$consistent)
+})
+
 test_that("endpoint_model_submit can be run", {
   test_redis_available()
   queue <- hintr:::Queue$new()

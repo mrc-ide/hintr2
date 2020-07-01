@@ -11,6 +11,23 @@ validate_baseline_input <- function(file_path, type) {
     }', type, file_path)
 }
 
+validate_baseline_all_input <- function(pjnz, shape, population) {
+  quote <- function(x) {
+    if (is.null(x)) {
+      "null"
+    } else {
+      paste0('"', x, '"')
+    }
+  }
+  sprintf(
+    '{"pjnz": %s,
+      "shape": %s,
+      "population": %s
+    }',
+    quote(pjnz), quote(shape), quote(population)
+  )
+}
+
 skip_if_sensitive_data_missing <- function() {
   sensitive_path <- Sys.getenv("NAOMI_SENSITIVE_DATA_PATH",
                                "testdata/sensitive")
