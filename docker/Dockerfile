@@ -1,17 +1,11 @@
-FROM rocker/r-ver:3.6.0
-
-RUN apt-get update && apt-get -y install \
-        texinfo \
-        texlive \
-        texlive-fonts-extra
+FROM mrcide/naomi-base:latest
 
 COPY docker/bin /usr/local/bin/
-RUN sed  -i'' '/mran.microsoft.com/d' /usr/local/lib/R/etc/Rprofile.site
 
-RUN install_packages --repo=https://mrc-ide.github.io/drat \
-    knitr \
-    rmarkdown \
-    testthat
+RUN install_remote \
+        mrc-ide/naomi
 
 COPY . /src
+RUN cd /src/hintr && ./scripts/build_test_data
+RUN R CMD INSTALL /src/hintr
 RUN R CMD INSTALL /src

@@ -5,3 +5,4 @@
 ^example$
 ^docker$
 ^buildkite$
+^tests/testthat/testdata/sensitive$
