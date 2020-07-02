@@ -1,3 +1,7 @@
+root_endpoint <- function() {
+  scalar("Welcome")
+}
+
 validate_baseline <- function(input) {
   input <- jsonlite::fromJSON(input)
   validate_func <- switch(input$type,
@@ -16,8 +20,41 @@ validate_baseline <- function(input) {
   })
 }
 
-root_endpoint <- function() {
-  scalar("Welcome")
+validate_baseline_combined <- function(input) {
+  input <- jsonlite::fromJSON(input)
+  as_file_object <- function(x) {
+    if (!is.null(x)) {
+      hintr:::file_object(x)
+    } else {
+      NULL
+    }
+  }
+  tryCatch({
+    hintr:::do_validate_baseline(as_file_object(input$pjnz),
+                                 as_file_object(input$shape),
+                                 as_file_object(input$population))
+  },
+  error = function(e) {
+    pkgapi::pkgapi_stop(e$message, "INVALID_BASELINE")
+  })
+}
+
+validate_survey_programme <- function(input) {
+  input <- jsonlite::fromJSON(input)
+  validate_func <- switch(input$type,
+                          programme = hintr:::do_validate_programme,
+                          anc = hintr:::do_validate_anc,
+                          survey = hintr:::do_validate_survey)
+  tryCatch({
+    shape <- hintr:::file_object(input$shape)
+    hintr:::assert_file_exists(input$file$path)
+    hintr:::assert_file_exists(shape$path)
+    hintr:::input_response(validate_func(input$file, shape),
+                           input$type, input$file)
+  },
+  error = function(e) {
+    pkgapi::pkgapi_stop(e$message, "INVALID_FILE")
+  })
 }
 
 submit_model <- function(queue) {
