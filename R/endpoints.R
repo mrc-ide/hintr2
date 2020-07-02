@@ -20,6 +20,19 @@ root_endpoint <- function() {
   scalar("Welcome")
 }
 
+model_options <- function(input) {
+  input <- jsonlite::fromJSON(input)
+  tryCatch({
+    hintr:::assert_file_exists(input$shape$path)
+    hintr:::assert_file_exists(input$survey$path)
+    hintr:::json_verbatim(
+      hintr:::do_endpoint_model_options(input$shape, input$survey,
+                                        input$programme, input$anc))
+  }, error = function(e) {
+    pkgapi::pkgapi_stop(e$message, "INVALID_OPTIONS")
+  })
+}
+
 submit_model <- function(queue) {
   function(input) {
     input <- jsonlite::fromJSON(input)

@@ -2,6 +2,8 @@ api_build <- function(queue) {
   api <- pkgapi::pkgapi$new()
   api$handle(endpoint_root())
   api$handle(endpoint_baseline_individual())
+  api$handle(endpoint_model_options())
+  #api$handle(endpoint_model_options_validate())
   api$handle(endpoint_model_submit(queue))
   api$handle(endpoint_model_status(queue))
   api$handle(endpoint_plotting_metadata())
@@ -52,6 +54,24 @@ endpoint_baseline_individual <- function() {
                               input,
                               returning = response,
                               validate = TRUE)
+}
+
+endpoint_model_options <- function() {
+  input <- pkgapi::pkgapi_input_body_json("input",
+                                          "ModelRunOptionsRequest.schema",
+                                          schema_root())
+  response <- pkgapi::pkgapi_returning_json("ModelRunOptions.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/model/options",
+                              model_options,
+                              input,
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_model_options_validate <- function() {
+
 }
 
 endpoint_model_submit <- function(queue) {

@@ -1,0 +1,183 @@
+context("endpoints-model-options")
+
+test_that("endpoint_model_options returns model options", {
+  input <- model_options_input(file.path("testdata", "malawi.geojson"),
+                               file.path("testdata", "survey.csv"),
+                               file.path("testdata", "programme.csv"),
+                               file.path("testdata", "anc.csv"))
+
+  response <- model_options(input)
+  json <- jsonlite::parse_json(response)
+
+  expect_equal(names(json), "controlSections")
+  expect_length(json$controlSections, 7)
+
+  general_section <- json$controlSections[[1]]
+  expect_length(
+    general_section$controlGroups[[1]]$controls[[1]]$options, 1)
+  expect_equal(
+    names(general_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label", "children")
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "MWI"
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "Malawi"
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$value,
+    "MWI")
+  expect_length(
+    general_section$controlGroups[[2]]$controls[[1]]$options,
+    5
+  )
+  expect_equal(
+    names(general_section$controlGroups[[2]]$controls[[1]]$options[[1]]),
+    c("id", "label")
+  )
+  expect_equal(
+    general_section$controlGroups[[2]]$controls[[1]]$options[[1]]$id,
+    "0")
+  expect_equal(
+    general_section$controlGroups[[2]]$controls[[1]]$options[[1]]$label,
+    "Country")
+
+  survey_section <- json$controlSections[[2]]
+  expect_true(
+    length(survey_section$controlGroups[[1]]$controls[[1]]$options) >=
+    32
+  )
+  expect_length(
+    survey_section$controlGroups[[2]]$controls[[1]]$options,
+    4
+  )
+  expect_equal(
+    names(survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]$id,
+    "MWI2016PHIA")
+  expect_equal(
+    survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]$label,
+    "MWI2016PHIA")
+
+  anc_section <- json$controlSections[[3]]
+  expect_length(
+    anc_section$controlGroups[[1]]$controls[[1]]$options,
+    8
+  )
+  expect_equal(
+    names(anc_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    anc_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "2018")
+  expect_equal(
+    anc_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "2018")
+
+  art_section <- json$controlSections[[4]]
+  expect_length(
+    art_section$controlGroups[[1]]$controls[[1]]$options,
+    2
+  )
+  expect_equal(
+    names(art_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "true")
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "Yes")
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[2]]$id,
+    "false")
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[2]]$label,
+    "No")
+
+})
+
+test_that("endpoint_model_options can be run without programme data", {
+  input <- model_options_input(file.path("testdata", "malawi.geojson"),
+                               file.path("testdata", "survey.csv"),
+                               NULL,
+                               NULL)
+
+  response <- model_options(input)
+  json <- jsonlite::parse_json(response)
+
+  expect_equal(names(json), "controlSections")
+  expect_length(json$controlSections, 5)
+
+  general_section <- json$controlSections[[1]]
+  expect_length(
+    general_section$controlGroups[[1]]$controls[[1]]$options, 1)
+  expect_equal(
+    names(general_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label", "children")
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "MWI"
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "Malawi"
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$value,
+    "MWI")
+  expect_length(
+    general_section$controlGroups[[2]]$controls[[1]]$options,
+    5
+  )
+  expect_equal(
+    names(general_section$controlGroups[[2]]$controls[[1]]$options[[1]]),
+    c("id", "label")
+  )
+  expect_equal(
+    general_section$controlGroups[[2]]$controls[[1]]$options[[1]]$id,
+    "0")
+  expect_equal(
+    general_section$controlGroups[[2]]$controls[[1]]$options[[1]]$label,
+    "Country")
+
+  survey_section <- json$controlSections[[2]]
+  expect_true(
+    length(survey_section$controlGroups[[1]]$controls[[1]]$options) >
+    32
+  )
+  expect_length(
+    survey_section$controlGroups[[2]]$controls[[1]]$options,
+    4
+  )
+  expect_equal(
+    names(survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]$id,
+    "MWI2016PHIA")
+  expect_equal(
+    survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]$label,
+    "MWI2016PHIA")
+})
+
+test_that("endpoint_model_options fails without shape & survey data", {
+  input <- model_options_input(NULL,
+                               NULL,
+                               file.path("testdata", "programme.csv"),
+                               file.path("testdata", "anc.csv"))
+
+  error <- expect_error(model_options(input))
+
+  expect_equal(error$data[[1]]$error, scalar("INVALID_OPTIONS"))
+  expect_equal(
+    error$data[[1]]$detail,
+    scalar("File at path NULL does not exist. Create it, or fix the path."))
+  expect_equal(error$status_code, 400)
+})

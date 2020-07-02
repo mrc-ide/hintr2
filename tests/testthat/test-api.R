@@ -26,6 +26,212 @@ test_that("endpoint_baseline_individual works", {
   expect_equal(body$data$filters, NULL)
 })
 
+test_that("endpoint_model_options", {
+  endpoint <- endpoint_model_options()
+  response <- endpoint$run(readLines("payload/model_run_options_payload.json"))
+
+  expect_equal(response$status_code, 200)
+  expect_null(response$error)
+  body <- jsonlite::parse_json(response$body)
+  expect_equal(names(body$data), "controlSections")
+  expect_length(body$data$controlSections, 7)
+
+  general_section <- body$data$controlSections[[1]]
+  expect_length(
+    general_section$controlGroups[[1]]$controls[[1]]$options, 1)
+  expect_equal(
+    names(general_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label", "children")
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "MWI"
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "Malawi"
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$value,
+    "MWI")
+  expect_length(
+    general_section$controlGroups[[2]]$controls[[1]]$options,
+    5
+  )
+  expect_equal(
+    names(general_section$controlGroups[[2]]$controls[[1]]$options[[1]]),
+    c("id", "label")
+  )
+  expect_equal(
+    general_section$controlGroups[[2]]$controls[[1]]$options[[1]]$id,
+    "0")
+  expect_equal(
+    general_section$controlGroups[[2]]$controls[[1]]$options[[1]]$label,
+    "Country")
+
+  survey_section <- body$data$controlSections[[2]]
+  expect_true(
+    length(survey_section$controlGroups[[1]]$controls[[1]]$options) >
+      32
+  )
+  expect_length(
+    survey_section$controlGroups[[2]]$controls[[1]]$options,
+    4
+  )
+  expect_equal(
+    names(survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]$id,
+    "MWI2016PHIA")
+  expect_equal(
+    survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]$label,
+    "MWI2016PHIA")
+
+  anc_section <- body$data$controlSections[[3]]
+  expect_length(
+    anc_section$controlGroups[[1]]$controls[[1]]$options,
+    8
+  )
+  expect_equal(
+    names(anc_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    anc_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "2018")
+  expect_equal(
+    anc_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "2018")
+
+  art_section <- body$data$controlSections[[4]]
+  expect_length(
+    art_section$controlGroups[[1]]$controls[[1]]$options,
+    2
+  )
+  expect_equal(
+    names(art_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "true")
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "Yes")
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[2]]$id,
+    "false")
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[2]]$label,
+    "No")
+
+  expect_true(!is.null(body$version))
+  expect_equal(names(body$version), c("hintr", "naomi", "rrq", "traduire"))
+  expect_true(all(grepl("^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$", body$version)))
+})
+
+test_that("endpoint_model_options works", {
+  api <- api_build()
+  res <- api$request("POST", "/model/options",
+                     body = readLines("payload/model_run_options_payload.json"))
+  expect_equal(res$status, 200)
+  body <- jsonlite::parse_json(res$body)
+  expect_null(body$error)
+  expect_equal(names(body$data), "controlSections")
+  expect_length(body$data$controlSections, 7)
+
+  general_section <- body$data$controlSections[[1]]
+  expect_length(
+    general_section$controlGroups[[1]]$controls[[1]]$options, 1)
+  expect_equal(
+    names(general_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label", "children")
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "MWI"
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "Malawi"
+  )
+  expect_equal(
+    general_section$controlGroups[[1]]$controls[[1]]$value,
+    "MWI")
+  expect_length(
+    general_section$controlGroups[[2]]$controls[[1]]$options,
+    5
+  )
+  expect_equal(
+    names(general_section$controlGroups[[2]]$controls[[1]]$options[[1]]),
+    c("id", "label")
+  )
+  expect_equal(
+    general_section$controlGroups[[2]]$controls[[1]]$options[[1]]$id,
+    "0")
+  expect_equal(
+    general_section$controlGroups[[2]]$controls[[1]]$options[[1]]$label,
+    "Country")
+
+  survey_section <- body$data$controlSections[[2]]
+  expect_true(
+    length(survey_section$controlGroups[[1]]$controls[[1]]$options) >
+      32
+  )
+  expect_length(
+    survey_section$controlGroups[[2]]$controls[[1]]$options,
+    4
+  )
+  expect_equal(
+    names(survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]$id,
+    "MWI2016PHIA")
+  expect_equal(
+    survey_section$controlGroups[[2]]$controls[[1]]$options[[1]]$label,
+    "MWI2016PHIA")
+
+  anc_section <- body$data$controlSections[[3]]
+  expect_length(
+    anc_section$controlGroups[[1]]$controls[[1]]$options,
+    8
+  )
+  expect_equal(
+    names(anc_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    anc_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "2018")
+  expect_equal(
+    anc_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "2018")
+
+  art_section <- body$data$controlSections[[4]]
+  expect_length(
+    art_section$controlGroups[[1]]$controls[[1]]$options,
+    2
+  )
+  expect_equal(
+    names(art_section$controlGroups[[1]]$controls[[1]]$options[[1]]),
+    c("id", "label"))
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[1]]$id,
+    "true")
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[1]]$label,
+    "Yes")
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[2]]$id,
+    "false")
+  expect_equal(
+    art_section$controlGroups[[1]]$controls[[1]]$options[[2]]$label,
+    "No")
+
+  expect_true(!is.null(body$version))
+  expect_equal(names(body$version), c("hintr", "naomi", "rrq", "traduire"))
+  expect_true(all(grepl("^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$", body$version)))
+})
+
 test_that("endpoint_model_submit can be run", {
   test_redis_available()
   queue <- hintr:::Queue$new()
