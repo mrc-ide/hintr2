@@ -2,6 +2,8 @@ api_build <- function(queue) {
   api <- pkgapi::pkgapi$new()
   api$handle(endpoint_root())
   api$handle(endpoint_baseline_individual())
+  api$handle(endpoint_baseline_combined())
+  api$handle(endpoint_validate_survey_programme())
   api$handle(endpoint_model_submit(queue))
   api$handle(endpoint_model_status(queue))
   api$handle(endpoint_plotting_metadata())
@@ -49,6 +51,34 @@ endpoint_baseline_individual <- function() {
   pkgapi::pkgapi_endpoint$new("POST",
                               "/validate/baseline-individual",
                               validate_baseline,
+                              input,
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_baseline_combined <- function() {
+  input <- pkgapi::pkgapi_input_body_json("input",
+                                          "ValidateBaselineRequest.schema",
+                                          schema_root())
+  response <- pkgapi::pkgapi_returning_json("ValidateBaselineResponse.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/validate/baseline-combined",
+                              validate_baseline_combined,
+                              input,
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_validate_survey_programme <- function() {
+  input <- pkgapi::pkgapi_input_body_json("input",
+                                          "ValidateSurveyAndProgrammeRequest.schema",
+                                          schema_root())
+  response <- pkgapi::pkgapi_returning_json("ValidateInputResponse.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/validate/survey-and-programme",
+                              validate_survey_programme,
                               input,
                               returning = response,
                               validate = TRUE)
