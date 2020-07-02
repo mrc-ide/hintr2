@@ -59,16 +59,20 @@ endpoint_baseline_individual <- function() {
 returning_json_version <- function(schema = NULL, root = NULL,
                                    status_code = 200L) {
   ## This is the same as pkgapi::pkgapi_returning_json except we
-  ## extend the process function to also add version info along side the
+  ## override the process function to also add version info along side the
   ## data
   returning  <- pkgapi::pkgapi_returning_json(schema, root, status_code)
-  default_process <- returning$process
-  process_with_version <- function(data) {
-    out <- hintr:::json_verbatim(default_process(data))
-    out$version <- cfg$verson_info
-    hintr:::to_json(out)
+  response_success <- function(data) {
+    list(
+      status = jsonlite::unbox("success"),
+      errors = NULL,
+      data = data,
+      version = cfg$version_info
+    )
   }
-  returning$process <- process_with_version
+  returning$process <- function(data) {
+    as.character(hintr:::to_json(response_success(data)))
+  }
   returning
 }
 

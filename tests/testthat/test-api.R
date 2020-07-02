@@ -135,7 +135,6 @@ test_that("endpoint_model_options works", {
                      body = readLines("payload/model_run_options_payload.json"))
   expect_equal(res$status, 200)
   body <- jsonlite::parse_json(res$body)
-  expect_null(body$error)
   expect_equal(names(body$data), "controlSections")
   expect_length(body$data$controlSections, 7)
 
@@ -398,14 +397,25 @@ test_that("api can call endpoint_plotting_metadata", {
 # })
 
 test_that("returning_json_version adds version", {
-  returning <- returning_json_version("ValidateInputResponse.schema",
-                                      schema_root())
-  out <- returning$process(list(
-    hash = "12345",
-    filename = "original",
-    type = "population",
+  returning_with_version <- returning_json_version(
+    "ValidateInputResponse.schema", schema_root())
+  returning <- pkgapi::pkgapi_returning_json(
+    "ValidateInputResponse.schema", schema_root())
+  input <- list(
+    hash = scalar("12345"),
+    filename = scalar("original"),
+    type = scalar("population"),
     data = json_null(),
     filters = json_null()
-  ))
-  test_that()
+  )
+  version_out <- returning_with_version$process(input)
+  out <- returning$process(input)
+  version_response <- jsonlite::parse_json(version_out)
+  response <- jsonlite::parse_json(out)
+  expect_equal(names(version_response),
+               c("status", "errors", "data", "version"))
+  expect_equal(version_response$status, response$status)
+  expect_equal(version_response$errors, response$errors)
+  expect_equal(version_response$data, response$data)
+  expect_equivalent(version_response$version, cfg$version_info)
 })
