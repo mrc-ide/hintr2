@@ -56,12 +56,27 @@ endpoint_baseline_individual <- function() {
                               validate = TRUE)
 }
 
+returning_json_version <- function(schema = NULL, root = NULL,
+                                   status_code = 200L) {
+  ## This is the same as pkgapi::pkgapi_returning_json except we
+  ## extend the process function to also add version info along side the
+  ## data
+  returning  <- pkgapi::pkgapi_returning_json(schema, root, status_code)
+  default_process <- returning$process
+  process_with_version <- function(data) {
+    out <- hintr:::json_verbatim(default_process(data))
+    out$version <- cfg$verson_info
+    hintr:::to_json(out)
+  }
+  returning$process <- process_with_version
+  returning
+}
+
 endpoint_model_options <- function() {
   input <- pkgapi::pkgapi_input_body_json("input",
                                           "ModelRunOptionsRequest.schema",
                                           schema_root())
-  response <- pkgapi::pkgapi_returning_json("ModelRunOptions.schema",
-                                            schema_root())
+  response <- returning_json_version("ModelRunOptions.schema", schema_root())
   pkgapi::pkgapi_endpoint$new("POST",
                               "/model/options",
                               model_options,

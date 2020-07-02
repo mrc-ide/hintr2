@@ -396,3 +396,16 @@ test_that("api can call endpoint_plotting_metadata", {
 #   # expect_true(all(names(body$data) %in%
 #   #                   c("survey", "anc", "output", "programme")))
 # })
+
+test_that("returning_json_version adds version", {
+  returning <- returning_json_version("ValidateInputResponse.schema",
+                                      schema_root())
+  out <- returning$process(list(
+    hash = "12345",
+    filename = "original",
+    type = "population",
+    data = json_null(),
+    filters = json_null()
+  ))
+  test_that()
+})
