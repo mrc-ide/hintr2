@@ -1,5 +1,7 @@
 context("endpoints")
 
+gc()
+
 test_that("endpoint_plotting_metadata gets metadata", {
   response <- plotting_metadata("MWI")
 

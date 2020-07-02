@@ -1,5 +1,7 @@
 context("endpoints-download")
 
+gc()
+
 test_that("indicator download returns bytes", {
   test_redis_available()
   test_mock_model_available()

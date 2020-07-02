@@ -1,5 +1,7 @@
 context("api")
 
+gc()
+
 test_that("endpoint_baseline_individual", {
   endpoint <- endpoint_baseline_individual()
   response <- endpoint$run(readLines("payload/validate_pjnz_payload.json"))
