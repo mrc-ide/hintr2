@@ -33,6 +33,25 @@ model_options <- function(input) {
   })
 }
 
+model_options_validate <- function(input) {
+  input <- jsonlite::fromJSON(input)
+  tryCatch({
+    ## Update some labels to match what naomi requires
+    ## TODO: Some of this is shared between model running and here so we
+    ## should use use common code when we merge this back into hintr.
+    ## This endpoint currently isn't called see mrc-592.
+    data <- input$data
+    data$art_number <- data$programme
+    data$programme <- NULL
+    data$anc_testing <- data$anc
+    data$anc <- NULL
+    data <- naomi:::format_data_input(data)
+    list(valid = scalar(naomi:::validate_model_options(data, input$options)))
+  }, error = function(e) {
+    pkgapi::pkgapi_stop(e$message, "INVALID_OPTIONS")
+  })
+}
+
 submit_model <- function(queue) {
   function(input) {
     input <- jsonlite::fromJSON(input)

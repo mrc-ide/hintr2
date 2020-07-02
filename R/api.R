@@ -3,7 +3,7 @@ api_build <- function(queue) {
   api$handle(endpoint_root())
   api$handle(endpoint_baseline_individual())
   api$handle(endpoint_model_options())
-  #api$handle(endpoint_model_options_validate())
+  api$handle(endpoint_model_options_validate())
   api$handle(endpoint_model_submit(queue))
   api$handle(endpoint_model_status(queue))
   api$handle(endpoint_plotting_metadata())
@@ -65,7 +65,7 @@ returning_json_version <- function(schema = NULL, root = NULL,
   response_success <- function(data) {
     list(
       status = jsonlite::unbox("success"),
-      errors = NULL,
+      errors = json_null(),
       data = data,
       version = cfg$version_info
     )
@@ -90,7 +90,17 @@ endpoint_model_options <- function() {
 }
 
 endpoint_model_options_validate <- function() {
-
+  input <- pkgapi::pkgapi_input_body_json("input",
+                                          "ModelOptionsValidateRequest.schema",
+                                          schema_root())
+  response <- pkgapi::pkgapi_returning_json("ModelOptionsValidate.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/validate/options",
+                              model_options_validate,
+                              input,
+                              returning = response,
+                              validate = TRUE)
 }
 
 endpoint_model_submit <- function(queue) {

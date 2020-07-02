@@ -231,6 +231,31 @@ test_that("endpoint_model_options works", {
   expect_true(all(grepl("^(\\d+\\.)?(\\d+\\.)?(\\*|\\d+)$", body$version)))
 })
 
+test_that("endpoint_model_options_validate can be run", {
+  test_redis_available()
+  queue <- hintr:::Queue$new()
+
+  endpoint <- endpoint_model_options_validate()
+  response <- endpoint$run(readLines("payload/validate_options_payload.json"))
+
+  expect_equal(response$status_code, 200)
+  expect_null(response$error)
+  expect_equal(response$data$valid, scalar(TRUE))
+})
+
+test_that("api can call endpoint_model_options_validate", {
+  test_redis_available()
+  queue <- hintr:::Queue$new()
+  api <- api_build(queue)
+  res <- api$request("POST", "/validate/options",
+                     body = readLines("payload/validate_options_payload.json"))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_null(body$errors)
+  expect_true(body$data$valid)
+})
+
 test_that("endpoint_model_submit can be run", {
   test_redis_available()
   queue <- hintr:::Queue$new()
