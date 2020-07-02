@@ -18,10 +18,9 @@ test_that("indicator download returns bytes", {
   out <- queue$queue$task_wait(response$id)
   summary <- download_summary(queue)
   download <- summary(response$id)
-  expect_type(download$bytes, "raw")
-  expect_length(download$bytes, file.size(
+  expect_type(download, "raw")
+  expect_length(download, file.size(
     system.file("output", "malawi_summary_download.zip", package = "hintr")))
-  expect_equal(download$id, response$id)
 })
 
 test_that("spectrum download returns bytes", {
@@ -40,10 +39,9 @@ test_that("spectrum download returns bytes", {
   out <- queue$queue$task_wait(response$id)
   spectrum <- download_spectrum(queue)
   download <- spectrum(response$id)
-  expect_type(download$bytes, "raw")
-  expect_length(download$bytes, file.size(
+  expect_type(download, "raw")
+  expect_length(download, file.size(
     system.file("output", "malawi_spectrum_download.zip", package = "hintr")))
-  expect_equal(download$id, response$id)
 })
 
 test_that("download returns useful error if model run fails", {

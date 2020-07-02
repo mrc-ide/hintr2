@@ -129,14 +129,14 @@ plotting_metadata <- function(iso3) {
 }
 
 download_spectrum <- function(queue) {
-  download(queue, "spectrum")
+  download(queue, "spectrum", "naomi_spectrum_digest")
 }
 
 download_summary <- function(queue) {
-  download(queue, "summary")
+  download(queue, "summary", "naomi_coarse_age_groups")
 }
 
-download <- function(queue, type) {
+download <- function(queue, type, filename) {
   function(id) {
     tryCatch({
       res <- queue$result(id)
@@ -146,11 +146,13 @@ download <- function(queue, type) {
       path <- switch(type,
                      "spectrum" = res$spectrum_path,
                      "summary" = res$summary_path)
-      list(
-        bytes = readBin(path, "raw", n = file.size(path)),
-        id = id,
-        metadata = res$metadata
-      )
+      bytes <- readBin(path, "raw", n = file.size(path))
+      bytes <- pkgapi::pkgapi_add_headers(bytes, list(
+        "Content-Disposition" =
+        sprintf('attachment; filename="%s_%s_%s.zip"',
+                paste(res$metadata$areas, collapse = ", "),
+                hintr:::iso_time_str(), filename)))
+      bytes
     },
     error = function(e) {
       if (is_pkgapi_error(e)) {
