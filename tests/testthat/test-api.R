@@ -551,5 +551,12 @@ test_that("returning_json_version adds version", {
   expect_equal(version_response$status, response$status)
   expect_equal(version_response$errors, response$errors)
   expect_equal(version_response$data, response$data)
-  expect_equivalent(version_response$version, cfg$version_info)
+  expect_equal(version_response$version$hintr,
+               unclass(cfg$version_info$hintr))
+  expect_equal(version_response$version$naomi,
+               unclass(cfg$version_info$naomi))
+  expect_equal(version_response$version$rrq,
+               unclass(cfg$version_info$rrq))
+  expect_equal(version_response$version$traduire,
+               unclass(cfg$version_info$traduire))
 })
