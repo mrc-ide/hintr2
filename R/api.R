@@ -7,10 +7,10 @@ api_build <- function(queue) {
   api$handle(endpoint_model_submit(queue))
   api$handle(endpoint_model_status(queue))
   api$handle(endpoint_plotting_metadata())
-  api$handle(endpoint_download_spectrum(queue, "GET"))
-  api$handle(endpoint_download_spectrum(queue, "HEAD"))
-  api$handle(endpoint_download_summary(queue, "GET"))
-  api$handle(endpoint_download_summary(queue, "HEAD"))
+  api$handle(endpoint_download_spectrum(queue))
+  api$handle(endpoint_download_spectrum_head(queue))
+  api$handle(endpoint_download_summary(queue))
+  api$handle(endpoint_download_summary_head(queue))
   api
 }
 
@@ -120,16 +120,39 @@ endpoint_plotting_metadata <- function() {
                               validate = TRUE)
 }
 
-endpoint_download_spectrum <- function(queue, method) {
-  pkgapi::pkgapi_endpoint$new(method,
+## Return same headers as binary returning but ensure no body is returned.
+returning_binary_head <- function(status_code = 200L) {
+  pkgapi::pkgapi_returning("application/octet-stream",
+                           process = function(data) NULL,
+                           validate = function(body) TRUE)
+}
+
+endpoint_download_spectrum <- function(queue) {
+  pkgapi::pkgapi_endpoint$new("GET",
                               "/download/spectrum/<id>",
                               download_spectrum(queue),
                               returning = pkgapi::pkgapi_returning_binary())
 }
 
-endpoint_download_summary <- function(queue, method) {
-  pkgapi::pkgapi_endpoint$new(method,
+endpoint_download_spectrum_head <- function(queue) {
+  pkgapi::pkgapi_endpoint$new("HEAD",
+                              "/download/spectrum/<id>",
+                              download_spectrum(queue),
+                              returning = returning_binary_head(),
+                              validate = FALSE)
+}
+
+endpoint_download_summary <- function(queue) {
+  pkgapi::pkgapi_endpoint$new("GET",
                               "/download/summary/<id>",
                               download_summary(queue),
                               returning = pkgapi::pkgapi_returning_binary())
+}
+
+endpoint_download_summary_head <- function(queue) {
+  pkgapi::pkgapi_endpoint$new("HEAD",
+                              "/download/summary/<id>",
+                              download_summary(queue),
+                              returning = returning_binary_head(),
+                              validate = FALSE)
 }

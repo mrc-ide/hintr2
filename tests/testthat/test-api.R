@@ -248,7 +248,7 @@ test_that("endpoint_download_spectrum can be run", {
   expect_equal(run_response$status_code, 200)
   out <- queue$queue$task_wait(run_response$data$id)
 
-  endpoint <- endpoint_download_spectrum(queue, "GET")
+  endpoint <- endpoint_download_spectrum(queue)
   response <- endpoint$run(run_response$data$id)
 
   expect_equal(response$status_code, 200)
@@ -262,14 +262,6 @@ test_that("endpoint_download_spectrum can be run", {
   expect_true(size + size/10 >
                 file.size(system.file("output", "malawi_spectrum_download.zip",
                                       package = "hintr")))
-
-  ## Can get HEAD
-  endpoint <- endpoint_download_spectrum(queue, "HEAD")
-  response <- endpoint$run(run_response$data$id)
-
-  expect_equal(response$status_code, 200)
-  expect_match(response$headers$`Content-Disposition`,
-               'attachment; filename="MWI_\\d+-\\d+_naomi_spectrum_digest.zip"')
 })
 
 test_that("api can call endpoint_download_spectrum", {
@@ -302,14 +294,6 @@ test_that("api can call endpoint_download_spectrum", {
   expect_true(size + size/10 >
                 file.size(system.file("output", "malawi_spectrum_download.zip",
                                       package = "hintr")))
-
-  ## Headers can be retrieved
-  res <- api$request("HEAD", paste0("/download/spectrum/", response$data$id))
-  expect_equal(res$status, 200)
-  expect_equal(res$headers$`Content-Type`, "application/octet-stream")
-  expect_match(
-    res$headers$`Content-Disposition`,
-    'attachment; filename="MWI_\\d+-\\d+_naomi_spectrum_digest.zip"')
 })
 
 test_that("endpoint_download_summary can be run", {
@@ -323,7 +307,7 @@ test_that("endpoint_download_summary can be run", {
   expect_equal(run_response$status_code, 200)
   out <- queue$queue$task_wait(run_response$data$id)
 
-  endpoint <- endpoint_download_summary(queue, "GET")
+  endpoint <- endpoint_download_summary(queue)
   response <- endpoint$run(run_response$data$id)
 
   expect_equal(response$status_code, 200)
@@ -338,15 +322,6 @@ test_that("endpoint_download_summary can be run", {
   expect_true(size + size/10 >
                 file.size(system.file("output", "malawi_summary_download.zip",
                                       package = "hintr")))
-
-  ## Can get HEAD
-  endpoint <- endpoint_download_summary(queue, "HEAD")
-  response <- endpoint$run(run_response$data$id)
-
-  expect_equal(response$status_code, 200)
-  expect_match(
-    response$headers$`Content-Disposition`,
-    'attachment; filename="MWI_\\d+-\\d+_naomi_coarse_age_groups.zip"')
 })
 
 test_that("api can call endpoint_download_summary", {
@@ -380,12 +355,107 @@ test_that("api can call endpoint_download_summary", {
   expect_true(size + size/10 >
                 file.size(system.file("output", "malawi_summary_download.zip",
                                       package = "hintr")))
+})
 
-  ## Headers can be retrieved
+test_that("returning_binary_head ensures no body in response", {
+  returning <- returning_binary_head()
+  data <- charToRaw("test")
+  expect_null(returning$process(data))
+  expect_true(returning$validate(NULL))
+})
+
+test_that("endpoint_download_spectrum_head returns headers only", {
+  test_redis_available()
+  test_mock_model_available()
+
+  queue <- hintr:::Queue$new()
+  run_endpoint <- endpoint_model_submit(queue)
+  path <- setup_submit_payload()
+  run_response <- run_endpoint$run(readLines(path))
+  expect_equal(run_response$status_code, 200)
+  out <- queue$queue$task_wait(run_response$data$id)
+
+  endpoint <- endpoint_download_spectrum_head(queue)
+  response <- endpoint$run(run_response$data$id)
+
+  expect_equal(response$status_code, 200)
+  expect_equal(response$content_type, "application/octet-stream")
+  expect_match(response$headers$`Content-Disposition`,
+               'attachment; filename="MWI_\\d+-\\d+_naomi_spectrum_digest.zip"')
+  expect_null(response$body, NULL)
+})
+
+test_that("api endpoint_download_spectrum_head returns headers only", {
+  test_redis_available()
+  test_mock_model_available()
+
+  queue <- hintr:::Queue$new()
+  api <- api_build(queue)
+
+  ## Run the model
+  path <- setup_submit_payload()
+  res <- api$request("POST", "/model/submit",
+                     body = readLines(path))
+  expect_equal(res$status, 200)
+  response <- jsonlite::fromJSON(res$body)
+  out <- queue$queue$task_wait(response$data$id)
+
+  ## Get result
+  res <- api$request("HEAD", paste0("/download/spectrum/", response$data$id))
+
+  expect_equal(res$status, 200)
+  expect_equal(res$headers$`Content-Type`, "application/octet-stream")
+  expect_match(res$headers$`Content-Disposition`,
+               'attachment; filename="MWI_\\d+-\\d+_naomi_spectrum_digest.zip"')
+  ## Plumber uses an empty string to represent an empty body
+  expect_equal(res$body, "")
+})
+
+test_that("endpoint_download_summary_head returns headers only", {
+  test_redis_available()
+  test_mock_model_available()
+
+  queue <- hintr:::Queue$new()
+  run_endpoint <- endpoint_model_submit(queue)
+  path <- setup_submit_payload()
+  run_response <- run_endpoint$run(readLines(path))
+  expect_equal(run_response$status_code, 200)
+  out <- queue$queue$task_wait(run_response$data$id)
+
+  endpoint <- endpoint_download_summary_head(queue)
+  response <- endpoint$run(run_response$data$id)
+
+  expect_equal(response$status_code, 200)
+  expect_equal(response$content_type, "application/octet-stream")
+  expect_match(
+    response$headers$`Content-Disposition`,
+     'attachment; filename="MWI_\\d+-\\d+_naomi_coarse_age_groups.zip"')
+  expect_null(response$body, NULL)
+})
+
+test_that("api endpoint_download_summary_head returns headers only", {
+  test_redis_available()
+  test_mock_model_available()
+
+  queue <- hintr:::Queue$new()
+  api <- api_build(queue)
+
+  ## Run the model
+  path <- setup_submit_payload()
+  res <- api$request("POST", "/model/submit",
+                     body = readLines(path))
+  expect_equal(res$status, 200)
+  response <- jsonlite::fromJSON(res$body)
+  out <- queue$queue$task_wait(response$data$id)
+
+  ## Get result
   res <- api$request("HEAD", paste0("/download/summary/", response$data$id))
+
   expect_equal(res$status, 200)
   expect_equal(res$headers$`Content-Type`, "application/octet-stream")
   expect_match(
     res$headers$`Content-Disposition`,
     'attachment; filename="MWI_\\d+-\\d+_naomi_coarse_age_groups.zip"')
+  ## Plumber uses an empty string to represent an empty body
+  expect_equal(res$body, "")
 })
