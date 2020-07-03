@@ -6,6 +6,7 @@ api_build <- function(queue) {
   api$handle(endpoint_validate_survey_programme())
   api$handle(endpoint_model_submit(queue))
   api$handle(endpoint_model_status(queue))
+  api$handle(endpoint_model_result(queue))
   api$handle(endpoint_plotting_metadata())
   api$handle(endpoint_download_spectrum(queue))
   api$handle(endpoint_download_spectrum_head(queue))
@@ -106,6 +107,16 @@ endpoint_model_status <- function(queue) {
   pkgapi::pkgapi_endpoint$new("GET",
                               "/model/status/<id>",
                               model_status(queue),
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_model_result <- function(queue) {
+  response <- pkgapi::pkgapi_returning_json("ModelResultResponse.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("GET",
+                              "/model/result/<id>",
+                              model_result(queue),
                               returning = response,
                               validate = TRUE)
 }

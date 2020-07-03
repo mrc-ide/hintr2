@@ -61,7 +61,7 @@ submit_model <- function(queue) {
   function(input) {
     input <- jsonlite::fromJSON(input)
     if (!hintr:::is_current_version(input$version)) {
-      pkgapi::pkgapi_stop(t_("MODEL_SUBMIT_OLD", package = "hintr"),
+      pkgapi::pkgapi_stop(tr_("MODEL_SUBMIT_OLD"),
                           "VERSION_OUT_OF_DATE")
     }
     tryCatch(
@@ -84,6 +84,27 @@ model_status <- function(queue) {
     error = function(e) {
       pkgapi::pkgapi_stop(e$message, "FAILED_TO_RETRIEVE_STATUS")
     })
+  }
+}
+
+model_result <- function(queue) {
+  function(id) {
+    task_status <- queue$queue$task_status(id)
+    if (task_status == "COMPLETE") {
+      hintr:::process_result(queue$result(id))
+    } else if (task_status == "ERROR") {
+      result <- queue$result(id)
+      trace <- c(sprintf("# %s", id), result$trace)
+      error_data <- structure(result$message, trace = trace)
+      pkgapi::pkgapi_stop(error_data, "MODEL_RUN_FAILED")
+    } else if (task_status == "ORPHAN") {
+      pkgapi::pkgapi_stop(tr_("MODEL_RESULT_CRASH"), "MODEL_RUN_FAILED")
+    } else if (task_status == "INTERRUPTED") {
+      pkgapi::pkgapi_stop(tr_("MODEL_RUN_CANCELLED"), "MODEL_RUN_FAILED")
+    } else { # ~= MISSING, PENDING, RUNNING
+      pkgapi::pkgapi_stop(tr_("MODEL_RESULT_MISSING"),
+                          "FAILED_TO_RETRIEVE_RESULT")
+    }
   }
 }
 
