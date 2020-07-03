@@ -4,6 +4,8 @@ api_build <- function(queue) {
   api$handle(endpoint_baseline_individual())
   api$handle(endpoint_baseline_combined())
   api$handle(endpoint_validate_survey_programme())
+  api$handle(endpoint_model_options())
+  api$handle(endpoint_model_options_validate())
   api$handle(endpoint_model_submit(queue))
   api$handle(endpoint_model_status(queue))
   api$handle(endpoint_model_result(queue))
@@ -74,9 +76,8 @@ endpoint_baseline_combined <- function() {
 }
 
 endpoint_validate_survey_programme <- function() {
-  input <- pkgapi::pkgapi_input_body_json("input",
-                                          "ValidateSurveyAndProgrammeRequest.schema",
-                                          schema_root())
+  input <- pkgapi::pkgapi_input_body_json(
+    "input", "ValidateSurveyAndProgrammeRequest.schema", schema_root())
   response <- pkgapi::pkgapi_returning_json("ValidateInputResponse.schema",
                                             schema_root())
   pkgapi::pkgapi_endpoint$new("POST",
@@ -86,6 +87,54 @@ endpoint_validate_survey_programme <- function() {
                               returning = response,
                               validate = TRUE)
 }
+
+returning_json_version <- function(schema = NULL, root = NULL,
+                                   status_code = 200L) {
+  ## This is the same as pkgapi::pkgapi_returning_json except we
+  ## override the process function to also add version info along side the
+  ## data
+  returning  <- pkgapi::pkgapi_returning_json(schema, root, status_code)
+  response_success <- function(data) {
+    list(
+      status = jsonlite::unbox("success"),
+      errors = json_null(),
+      data = data,
+      version = cfg$version_info
+    )
+  }
+  returning$process <- function(data) {
+    as.character(hintr:::to_json(response_success(data)))
+  }
+  returning
+}
+
+endpoint_model_options <- function() {
+  input <- pkgapi::pkgapi_input_body_json("input",
+                                          "ModelRunOptionsRequest.schema",
+                                          schema_root())
+  response <- returning_json_version("ModelRunOptions.schema", schema_root())
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/model/options",
+                              model_options,
+                              input,
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_model_options_validate <- function() {
+  input <- pkgapi::pkgapi_input_body_json("input",
+                                          "ModelOptionsValidateRequest.schema",
+                                          schema_root())
+  response <- pkgapi::pkgapi_returning_json("ModelOptionsValidate.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/validate/options",
+                              model_options_validate,
+                              input,
+                              returning = response,
+                              validate = TRUE)
+}
+
 
 endpoint_model_submit <- function(queue) {
   input <- pkgapi::pkgapi_input_body_json("input",
