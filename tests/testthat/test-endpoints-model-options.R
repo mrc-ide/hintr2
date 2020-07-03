@@ -1,13 +1,10 @@
 context("endpoints-model-options")
 
-gc()
-
 test_that("endpoint_model_options returns model options", {
   input <- model_options_input(file.path("testdata", "malawi.geojson"),
                                file.path("testdata", "survey.csv"),
                                file.path("testdata", "programme.csv"),
                                file.path("testdata", "anc.csv"))
-
   response <- model_options(input)
   json <- jsonlite::parse_json(response)
 

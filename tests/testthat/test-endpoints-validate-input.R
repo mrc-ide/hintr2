@@ -1,7 +1,5 @@
 context("endpoints-validate")
 
-gc()
-
 test_that("validate_baseline correctly validates data", {
   input <- validate_baseline_input(file.path("testdata", "Botswana2018.PJNZ"),
                                    "pjnz")

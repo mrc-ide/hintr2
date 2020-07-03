@@ -1,7 +1,5 @@
 context("survey-and-programme")
 
-gc()
-
 test_that("endpoint_validate_survey_programme supports programme file", {
   input <- validate_programme_survey_input(
     file.path("testdata", "programme.csv"),
