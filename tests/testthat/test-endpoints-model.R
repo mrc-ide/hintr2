@@ -8,7 +8,7 @@ test_that("endpoint model run queues a model run", {
   path <- setup_submit_payload()
 
   ## Call the endpoint
-  queue <- hintr:::Queue$new()
+  queue <- test_queue()
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
@@ -129,7 +129,7 @@ test_that("endpoint_run_model returns error if queueing fails", {
   path <- setup_submit_payload()
 
   ## Create mocks
-  queue <- hintr:::Queue$new()
+  queue <- test_queue()
   mock_submit <- function(data, options) { stop("Failed to queue") }
 
   ## Call the endpoint
@@ -153,7 +153,7 @@ test_that("running model with old version throws an error", {
                                }')
 
   ## Call the endpoint
-  queue <- hintr:::Queue$new()
+  queue <- test_queue()
   model_submit <- submit_model(queue)
   error <- expect_error(model_submit(readLines(path)))
 
@@ -166,7 +166,7 @@ test_that("running model with old version throws an error", {
 test_that("querying for status of missing job returns useful message", {
   test_redis_available()
 
-  queue <- hintr:::Queue$new()
+  queue <- test_queue()
   status_endpoint <- model_status(queue)
   status <- status_endpoint("ID")
   expect_equal(status$done, json_null())
@@ -179,7 +179,7 @@ test_that("endpoint_run_status returns error if query for status fails", {
   test_redis_available()
 
   ## Create mocks
-  queue <- hintr:::Queue$new()
+  queue <- test_queue()
   mock_status <- function(data, parameters) { stop("Failed to get status") }
 
   ## Call the endpoint

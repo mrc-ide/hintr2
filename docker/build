@@ -4,7 +4,7 @@ HERE=$(dirname $0)
 . $HERE/common
 
 rm -rf hintr
-git clone https://github.com/mrc-ide/hintr
+git clone --single-branch --branch mrc-1669 https://github.com/mrc-ide/hintr
 
 docker build --pull \
        -t $TAG_SHA \

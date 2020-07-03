@@ -16,3 +16,12 @@ MockQueue <- R6::R6Class(
     }
   )
 )
+
+test_queue <- function() {
+  queue <- hintr:::Queue$new()
+  withr::defer_parent({
+    message("cleaning up workers")
+    queue$cleanup()
+  })
+  queue
+}
