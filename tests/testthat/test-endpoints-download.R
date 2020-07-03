@@ -8,7 +8,7 @@ test_that("indicator download returns bytes", {
   path <- setup_submit_payload()
 
   ## Run the model
-  queue <- hintr:::Queue$new()
+  queue <- test_queue()
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
@@ -29,7 +29,7 @@ test_that("spectrum download returns bytes", {
   path <- setup_submit_payload()
 
   ## Run the model
-  queue <- hintr:::Queue$new()
+  queue <- test_queue()
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
@@ -54,7 +54,7 @@ test_that("download returns useful error if model run fails", {
 
   ## Run the model
   withr::with_envvar(c("USE_MOCK_MODEL" = "false"), {
-    queue <- hintr:::Queue$new()
+    queue <- test_queue()
     model_submit <- submit_model(queue)
     response <- model_submit(readLines(path))
     expect_true("id" %in% names(response))
@@ -74,7 +74,7 @@ test_that("download returns useful error if model result can't be retrieved", {
   test_mock_model_available()
 
   ## Try to download with task ID doesn't exist
-  queue <- hintr:::Queue$new()
+  queue <- test_queue()
   spectrum <- download_spectrum(queue)
   error <- expect_error(spectrum("id1"))
   expect_equal(error$data[[1]]$error, scalar("FAILED_TO_RETRIEVE_RESULT"))
