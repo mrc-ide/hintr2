@@ -140,6 +140,18 @@ model_result <- function(queue) {
   }
 }
 
+model_cancel <- function(queue) {
+  function(id) {
+    tryCatch({
+      queue$cancel(id)
+      json_null()
+    },
+    error = function(e) {
+      pkgapi::pkgapi_stop(e$message, "FAILED_TO_CANCEL")
+    })
+  }
+}
+
 plotting_metadata <- function(iso3) {
   tryCatch(
     hintr:::do_plotting_metadata(iso3),

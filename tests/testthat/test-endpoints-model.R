@@ -288,3 +288,67 @@ test_that("erroring model run returns useful messages", {
   expect_match(msg[[2]], "error-detail: test error")
   expect_match(msg[[3]], "error-trace: rrq:::rrq_worker_main")
 })
+
+test_that("model run can be cancelled", {
+  test_redis_available()
+  test_mock_model_available()
+
+  ## Start the model running
+  path <- setup_submit_payload()
+  queue <- test_queue()
+  model_submit <- submit_model(queue)
+  response <- model_submit(readLines(path))
+  expect_true("id" %in% names(response))
+  id <- response$id
+
+  running <- queue$queue$worker_task_id()
+  expect_equal(scalar(unname(running)), id)
+  worker <- names(running)
+  expect_equal(queue$queue$task_status(id), setNames("RUNNING", id))
+
+  ## Cancel the run
+  cancel_model <- model_cancel(queue)
+  response <- cancel_model(id)
+  expect_equal(response, json_null())
+
+  testthat::try_again(5, {
+    Sys.sleep(1)
+    log <- queue$queue$worker_log_tail(worker, n = Inf)
+    expect_true("INTERRUPT" %in% log$command)
+    expect_equal(queue$queue$task_status(id), setNames("INTERRUPTED", id))
+  })
+
+  get_status <- model_status(queue)
+  response <- get_status(id)
+  expect_true(response$done)
+  expect_false(response$success)
+  expect_equal(response$status, scalar("INTERRUPTED"))
+
+  get_result <- model_result(queue)
+  error <- expect_error(get_result(id))
+  expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
+  expect_equal(error$data[[1]]$detail,
+               scalar("Model run was cancelled by user"))
+  expect_equal(error$status_code, 400)
+})
+
+test_that("failed cancel sends reasonable message", {
+  test_redis_available()
+  test_mock_model_available()
+  ## Create request data
+  queue <- test_queue()
+  cancel_model <- model_cancel(queue)
+
+  id <- ids::random_id()
+  error <- expect_error(cancel_model(id))
+
+  ## TODO: translate the message ideally - requires some work in rrq
+  ## though.
+  expect_equal(error$data[[1]]$error, scalar("FAILED_TO_CANCEL"))
+  expect_match(error$data[[1]]$detail,
+               scalar("Task [[:xdigit:]]+ is not running \\(MISSING\\)"))
+  expect_equal(error$status_code, 400)
+
+  skip("TODO: return key see RESIDE-176")
+  expect_is(response$errors[[1]]$key, "character")
+})
