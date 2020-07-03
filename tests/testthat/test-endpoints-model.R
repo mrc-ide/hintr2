@@ -31,6 +31,7 @@ test_that("endpoint model run queues a model run", {
 
   ## Get the result
   get_model_result <- model_result(queue)
+  result <- get_model_result(response$id)
   expect_equal(names(result), c("data", "plottingMetadata"))
   expect_equal(colnames(result$data),
                c("area_id", "sex", "age_group", "calendar_quarter",
@@ -186,7 +187,7 @@ test_that("endpoint_run_status returns error if query for status fails", {
 test_that("querying for result of missing job returns useful error", {
   test_redis_available()
 
-  queue <- hintr:::Queue$new()
+  queue <- test_queue()
   get_model_result <- model_result(queue)
   error <- expect_error(get_model_result("ID"))
   expect_equal(error$data[[1]]$error, scalar("FAILED_TO_RETRIEVE_RESULT"))
@@ -196,72 +197,41 @@ test_that("querying for result of missing job returns useful error", {
 
 test_that("querying for an orphan task returns sensible error", {
   test_redis_available()
-  res <- MockPlumberResponse$new()
-  queue <- Queue$new(workers = 0)
-  model_result <- endpoint_model_result(queue)
 
+  queue <- test_queue(workers = 0)
   id <- ids::random_id()
   queue$queue$con$HSET(queue$queue$keys$task_status, id, "ORPHAN")
+  get_model_result <- model_result(queue)
+  error <- expect_error(get_model_result(id))
 
-  result <- jsonlite::parse_json(model_result(NULL, res, id))
-  expect_equal(res$status, 400)
-  expect_equal(result$status, "failure")
-  expect_length(result$data, 0)
-  expect_length(result$errors, 1)
-  expect_equal(result$errors[[1]]$error, "MODEL_RUN_FAILED")
-  expect_equal(result$errors[[1]]$detail,
-               "Worker has crashed - error details are unavailable")
+  expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
+  expect_equal(error$data[[1]]$detail,
+               scalar("Worker has crashed - error details are unavailable"))
+  expect_equal(error$status_code, 400)
 })
 
 test_that("querying for result of incomplete jobs returns useful error", {
   test_redis_available()
-  data <- list(
-    pjnz = list(path = "path/to/pjnz", hash = "12345", filename = "original"),
-    shape = list(path = "path/to/shape", hash = "12345",  filename = "original"),
-    population = list(path = "path/to/pop", hash = "12345", filename = "original"),
-    survey = list(path = "path/to/survey", hash = "12345", filename = "original"),
-    programme = list(path = "path/to/programme", hash = "12345", filename = "original"),
-    anc = list(path = "path/to/anc", hash = "12345", filename = "original")
-  )
-  options = list()
-  req <- list(postBody = '
-              {
-              "data": {
-              "pjnz": {"path":"path/to/file","hash": "12345","filename":"original"}
-              "shape":  {"path":"path/to/file","hash": "12345","filename":"original"},
-              "population":  {"path":"path/to/file","hash": "12345","filename":"original"},
-              "survey":  {"path":"path/to/file","hash": "12345","filename":"original"},
-              "programme":  {"path":"path/to/file","hash": "12345","filename":"original"},
-              "anc":  {"path":"path/to/file","hash": "12345","filename":"original"}
-              },
-              "options": {
-              "use_mock_model": true
-              }
-              }')
+  test_mock_model_available()
 
-  ## Create mock response
-  res <- MockPlumberResponse$new()
-
-  ## Call the endpoint
-  queue <- Queue$new()
-  model_submit <- endpoint_model_submit(queue)
-  response <- model_submit(req, res, data, options, cfg$version_info)
-  response <- jsonlite::parse_json(response)
-  expect_equal(response$status, "success")
+  path <- setup_submit_payload()
+  queue <- test_queue()
+  model_submit <- submit_model(queue)
+  response <- model_submit(readLines(path))
+  expect_true("id" %in% names(response))
 
   ## Get result prematurely
-  model_result <- endpoint_model_result(queue)
-  result <- model_result(NULL, res, response$data$id)
-  result <- jsonlite::parse_json(result)
-  expect_equal(res$status, 400)
-  expect_equal(result$status, "failure")
-  expect_length(result$data, 0)
-  expect_length(result$errors, 1)
-  expect_equal(result$errors[[1]]$error, "FAILED_TO_RETRIEVE_RESULT")
-  expect_equal(result$errors[[1]]$detail, "Failed to fetch result")
+  get_model_result <- model_result(queue)
+  error <- expect_error(get_model_result(response$id))
+
+  expect_equal(error$data[[1]]$error, scalar("FAILED_TO_RETRIEVE_RESULT"))
+  expect_equal(error$data[[1]]$detail,
+               scalar("Failed to fetch result"))
+  expect_equal(error$status_code, 400)
 })
 
 test_that("erroring model run returns useful messages", {
+  skip("Returning trace in errors not implemented yet see RESIDE-176")
   test_redis_available()
 
   ## Call the endpoint
@@ -281,7 +251,18 @@ test_that("erroring model run returns useful messages", {
   expect_equal(status$id, response$id)
 
   # Get the result
-  model_result <- endpoint_model_result(queue)
+  get_model_result <- model_result(queue)
+  error <- expect_error(get_model_result(response$id))
+
+  expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
+  expect_equal(error$data[[1]]$detail,
+               scalar("test error"))
+  expect_equal(error$status_code, 400)
+
+
+  # Get the result
+  get_model_result <- model_result(queue)
+  error <- expect_error(get_model_result(response$id))
   result <- model_result(req, res, response$data$id)
   result_parsed <- jsonlite::parse_json(result)
   expect_equal(res$status, 400)
@@ -302,7 +283,7 @@ test_that("erroring model run returns useful messages", {
   res$body <- result
   res$status <- 400
   msg <- capture_messages(
-    api_log_end(NULL, NULL, res, NULL))
+    hintr:::api_log_end(NULL, NULL, res, NULL))
   expect_match(msg[[1]], "error-key: [a-z]{5}-[a-z]{5}-[a-z]{5}")
   expect_match(msg[[2]], "error-detail: test error")
   expect_match(msg[[3]], "error-trace: rrq:::rrq_worker_main")
