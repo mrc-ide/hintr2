@@ -197,4 +197,50 @@ download <- function(queue, type, filename) {
   }
 }
 
+download_debug <- function(queue) {
+  function(id) {
+    tryCatch({
+      data <- queue$queue$task_data(id)
+      files <- unique(unlist(lapply(data$objects$data, function(x) {
+        if (!is.null(x)) {
+          x$path
+        }
+      }), FALSE, FALSE))
+      tmp <- tempfile()
+      path <- file.path(tmp, id)
+      dir.create(path, FALSE, TRUE)
 
+      data$sessionInfo <- utils::sessionInfo()
+      data$objects$data <- lapply(data$objects$data, function(x) {
+        if (!is.null(x)) {
+          list(path = basename(x$path), hash = x$hash, filename = x$filename)
+        }
+      })
+
+      path_files <- file.path(path, "files")
+      dir.create(path_files)
+      hintr:::file_copy(files, file.path(path_files, basename(files)))
+      saveRDS(data, file.path(path, "data.rds"))
+
+      on.exit(unlink(tmp, recursive = TRUE))
+
+      dest <- paste0(id, ".zip")
+      withr::with_dir(tmp, zip::zipr(dest, id))
+
+      path <- file.path(tmp, dest)
+      bytes <- readBin(path, "raw", n = file.size(path))
+      bytes <- pkgapi::pkgapi_add_headers(bytes, list(
+        "Content-Disposition" =
+          sprintf('attachment; filename="%s_%s_naomi_debug.zip"',
+                  id, hintr:::iso_time_str())))
+      bytes
+    },
+    error = function(e) {
+      if (is_pkgapi_error(e)) {
+        stop(e)
+      } else {
+        pkgapi::pkgapi_stop(e$message, "INVALID_TASK")
+      }
+    })
+  }
+}

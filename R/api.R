@@ -10,6 +10,7 @@ api_build <- function(queue) {
   api$handle(endpoint_model_status(queue))
   api$handle(endpoint_model_result(queue))
   api$handle(endpoint_model_cancel(queue))
+  api$handle(endpoint_model_debug(queue))
   api$handle(endpoint_plotting_metadata())
   api$handle(endpoint_download_spectrum(queue))
   api$handle(endpoint_download_spectrum_head(queue))
@@ -179,6 +180,13 @@ endpoint_model_cancel <- function(queue) {
                               model_cancel(queue),
                               returning = response,
                               validate = TRUE)
+}
+
+endpoint_model_debug <- function(queue) {
+  pkgapi::pkgapi_endpoint$new("GET",
+                              "/model/debug/<id>",
+                              download_debug(queue),
+                              returning = pkgapi::pkgapi_returning_binary())
 }
 
 endpoint_plotting_metadata <- function() {
