@@ -71,3 +71,14 @@ skip_if_sensitive_data_missing <- function() {
     skip("Sensitive data missing, check README for details.")
   }
 }
+
+MockQueue <- R6::R6Class(
+  "MockQueue",
+  inherit = Queue,
+  cloneable = FALSE,
+  public = list(
+    submit = function(data, options) {
+      self$queue$enqueue_(quote(stop("test error")))
+    }
+  )
+)

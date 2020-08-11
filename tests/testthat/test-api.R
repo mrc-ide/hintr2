@@ -550,6 +550,40 @@ test_that("api can call endpoint_model_result", {
   expect_null(body$data)
 })
 
+test_that("erroring model run returns useful messages", {
+  test_redis_available()
+
+  queue <- MockQueue$new()
+  api <- api_build(queue)
+  path <- setup_submit_payload()
+  res <- api$request("POST", "/model/submit",
+                     body = readLines(path))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_true(!is.null(body$data$id))
+
+  res <- api$request("GET", sprintf("/model/result/%s", body$data$id))
+  expect_equal(res$status, 400)
+  body <- jsonlite::fromJSON(res$body)
+
+  expect_equal(body$status, "failure")
+  expect_length(body$data, 0)
+  expect_true(nrow(body$errors) == 1)
+  expect_equal(body$errors[1, "error"], "MODEL_RUN_FAILED")
+  expect_equal(body$errors[1, "detail"], "test error")
+  skip("Error needs key and trace - see RESIDE-176")
+  expect_equal(body$errors[1, "key"], "some key")
+  expect_equal(body$errors[1, "trace"], "something ")
+
+  ## Check logging:
+  msg <- capture_messages(
+    hintr:::api_log_end(NULL, NULL, res, NULL))
+  expect_match(msg[[1]], "error-key: [a-z]{5}-[a-z]{5}-[a-z]{5}")
+  expect_match(msg[[2]], "error-detail: test error")
+  expect_match(msg[[3]], "error-trace: rrq:::rrq_worker_main")
+})
+
 test_that("endpoint_plotting_metadata can be run", {
   endpoint <- endpoint_plotting_metadata()
   response <- endpoint$run("MWI")

@@ -264,17 +264,6 @@ test_that("erroring model run returns useful messages", {
   expect_true("rrq:::rrq_worker_main()" %in% trace)
   expect_true("stop(\"test error\")" %in% trace)
   expect_match(trace[[1]], "^# [[:xdigit:]]+$")
-
-  skip("Logging not yet working see mrc-1683")
-  ## Check logging:
-  res$headers[["Content-Type"]] <- "application/json"
-  res$body <- result
-  res$status <- 400
-  msg <- capture_messages(
-    hintr:::api_log_end(NULL, NULL, res, NULL))
-  expect_match(msg[[1]], "error-key: [a-z]{5}-[a-z]{5}-[a-z]{5}")
-  expect_match(msg[[2]], "error-detail: test error")
-  expect_match(msg[[3]], "error-trace: rrq:::rrq_worker_main")
 })
 
 test_that("model run can be cancelled", {
