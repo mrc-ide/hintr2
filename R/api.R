@@ -16,6 +16,7 @@ api_build <- function(queue) {
   api$handle(endpoint_download_spectrum_head(queue))
   api$handle(endpoint_download_summary(queue))
   api$handle(endpoint_download_summary_head(queue))
+  api$handle(endpoint_hintr_version())
   api
 }
 
@@ -234,4 +235,14 @@ endpoint_download_summary_head <- function(queue) {
                               download_summary(queue),
                               returning = returning_binary_head(),
                               validate = FALSE)
+}
+
+endpoint_hintr_version <- function() {
+  response <- pkgapi::pkgapi_returning_json("HintrVersionResponse.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("GET",
+                              "/hintr/version",
+                              function() cfg$version_info,
+                              returning = response,
+                              validate = TRUE)
 }
