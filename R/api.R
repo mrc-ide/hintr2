@@ -17,6 +17,7 @@ api_build <- function(queue) {
   api$handle(endpoint_download_summary(queue))
   api$handle(endpoint_download_summary_head(queue))
   api$handle(endpoint_hintr_version())
+  api$handle(endpoint_hintr_worker_status(queue))
   api
 }
 
@@ -243,6 +244,16 @@ endpoint_hintr_version <- function() {
   pkgapi::pkgapi_endpoint$new("GET",
                               "/hintr/version",
                               function() cfg$version_info,
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_hintr_worker_status <- function(queue) {
+  response <- pkgapi::pkgapi_returning_json("HintrWorkerStatus.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("GET",
+                              "/hintr/worker/status",
+                              worker_status(queue),
                               returning = response,
                               validate = TRUE)
 }

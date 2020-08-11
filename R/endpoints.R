@@ -244,3 +244,9 @@ download_debug <- function(queue) {
     })
   }
 }
+
+worker_status <- function(queue) {
+  function() {
+    lapply(queue$queue$worker_status(), scalar)
+  }
+}

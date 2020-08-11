@@ -882,3 +882,25 @@ test_that("api can call endpoint_hintr_version", {
   expect_setequal(names(response$data), c("hintr", "naomi", "rrq", "traduire"))
   expect_equal(response$data$rrq, as.character(packageVersion("rrq")))
 })
+
+test_that("endpoint_hintr_worker_status works", {
+  test_redis_available()
+
+  queue <- test_queue()
+  endpoint <- endpoint_hintr_worker_status(queue)
+  response <- endpoint$run()
+
+  expect_equal(unlist(response$data, FALSE, FALSE), rep("IDLE", 2))
+})
+
+test_that("api can call endpoint_hintr_worker_status", {
+  test_redis_available()
+
+  queue <- test_queue()
+  api <- api_build(queue)
+  res <- api$request("GET", "/hintr/worker/status")
+  expect_equal(res$status, 200)
+  response <- jsonlite::fromJSON(res$body)
+
+  expect_equal(unlist(response$data, FALSE, FALSE), rep("IDLE", 2))
+})
