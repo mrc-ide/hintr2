@@ -15,3 +15,22 @@ test_that("endpoint worker status works", {
   response <- status()
   expect_equal(response, setNames(list(), character()))
 })
+
+test_that("stop calls quit and stop_workers", {
+  test_redis_available()
+  queue <- test_queue(workers = 0)
+  unlockBinding("worker_stop", queue$queue)
+  queue$queue$worker_stop <- mockery::mock()
+  mock_quit <- mockery::mock()
+  endpoint <- hintr_stop(queue)
+  mockery::stub(endpoint, "quit", mock_quit)
+  endpoint()
+
+  ## Quit call:
+  mockery::expect_called(mock_quit, 1)
+  expect_equal(mockery::mock_calls(mock_quit)[[1]], quote(quit(save = "no")))
+
+  ## Worker stop:
+  mockery::expect_called(queue$queue$worker_stop, 1)
+  expect_equal(length(mockery::mock_calls(queue$queue$worker_stop)[[1]]), 1)
+})

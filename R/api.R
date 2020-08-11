@@ -18,6 +18,7 @@ api_build <- function(queue) {
   api$handle(endpoint_download_summary_head(queue))
   api$handle(endpoint_hintr_version())
   api$handle(endpoint_hintr_worker_status(queue))
+  api$handle(endpoint_hintr_stop(queue))
   api
 }
 
@@ -256,4 +257,18 @@ endpoint_hintr_worker_status <- function(queue) {
                               worker_status(queue),
                               returning = response,
                               validate = TRUE)
+}
+
+pkgapi_returning_null <- function() {
+  pkgapi::pkgapi_returning(content_type = "text/plain",
+                           process = function(data) NULL,
+                           validate = function(body) TRUE)
+}
+
+endpoint_hintr_stop <- function(queue) {
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/hintr/stop",
+                              hintr_stop(queue),
+                              returning = pkgapi_returning_null(),
+                              validate = FALSE)
 }

@@ -904,3 +904,28 @@ test_that("api can call endpoint_hintr_worker_status", {
 
   expect_equal(unlist(response$data, FALSE, FALSE), rep("IDLE", 2))
 })
+
+test_that("endpoint_hintr_stop works", {
+  test_redis_available()
+
+  queue <- test_queue(workers = 0)
+  mock_hintr_stop <- mockery::mock(function() NULL)
+  mockery::stub(endpoint_hintr_stop, "hintr_stop", mock_hintr_stop)
+  endpoint <- endpoint_hintr_stop(queue)
+  response <- endpoint$run()
+
+  mockery::expect_called(mock_hintr_stop, 1)
+})
+
+test_that("api can call endpoint_hintr_stop", {
+  test_redis_available()
+
+  queue <- test_queue(workers = 0)
+  mock_hintr_stop <- mockery::mock(function() NULL)
+  with_mock("hintr2:::hintr_stop" = mock_hintr_stop, {
+    api <- api_build(queue)
+    res <- api$request("POST", "/hintr/stop")
+  })
+  expect_equal(res$status, 200)
+  mockery::expect_called(mock_hintr_stop, 1)
+})
