@@ -812,3 +812,50 @@ test_that("api endpoint_download_summary_head returns headers only", {
   ## Plumber uses an empty string to represent an empty body
   expect_equal(res$body, "")
 })
+
+test_that("endpoint_model_debug can be run", {
+  test_redis_available()
+  test_mock_model_available()
+
+  queue <- test_queue()
+  run_endpoint <- endpoint_model_submit(queue)
+  path <- setup_submit_payload()
+  run_response <- run_endpoint$run(readLines(path))
+  expect_equal(run_response$status_code, 200)
+  out <- queue$queue$task_wait(run_response$data$id)
+
+  endpoint <- endpoint_model_debug(queue)
+  response <- endpoint$run(run_response$data$id)
+
+  expect_equal(response$status_code, 200)
+  expect_match(response$headers$`Content-Disposition`,
+               'attachment; filename="\\w+_\\d+-\\d+_naomi_debug.zip"')
+  ## Download contains data
+  expect_true(length(response$data) > 1000000)
+})
+
+test_that("api can call endpoint_model_debug", {
+  test_redis_available()
+  test_mock_model_available()
+
+  queue <- test_queue()
+  api <- api_build(queue)
+
+  ## Run the model
+  path <- setup_submit_payload()
+  res <- api$request("POST", "/model/submit",
+                     body = readLines(path))
+  expect_equal(res$status, 200)
+  response <- jsonlite::fromJSON(res$body)
+  out <- queue$queue$task_wait(response$data$id)
+
+  ## Get result
+  res <- api$request("GET", paste0("/model/debug/", response$data$id))
+
+  expect_equal(res$status, 200)
+  expect_equal(res$headers$`Content-Type`, "application/octet-stream")
+  expect_match(res$headers$`Content-Disposition`,
+               'attachment; filename="\\w+_\\d+-\\d+_naomi_debug.zip"')
+  ## Download contains data
+  expect_true(length(res$body) > 1000000)
+})

@@ -354,10 +354,8 @@ test_that("failed cancel sends reasonable message", {
 })
 
 test_that("Debug endpoint returns debug information", {
-  ## this one needs legit filenames available
   test_redis_available()
   test_mock_model_available()
-  ## Create request data
 
   ## Start the model running
   path <- setup_submit_payload()
