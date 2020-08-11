@@ -14,7 +14,9 @@ test_that("endpoint_baseline_individual", {
 })
 
 test_that("endpoint_baseline_individual works", {
-  api <- api_build()
+  test_redis_available()
+  queue <- test_queue(workers = 0)
+  api <- api_build(queue)
   res <- api$request("POST", "/validate/baseline-individual",
                      body = readLines("payload/validate_pjnz_payload.json"))
   expect_equal(res$status, 200)
@@ -36,7 +38,9 @@ test_that("endpoint_baseline_combined", {
 })
 
 test_that("endpoint_baseline_combined works", {
-  api <- api_build()
+  test_redis_available()
+  queue <- test_queue(workers = 0)
+  api <- api_build(queue)
   res <- api$request("POST", "/validate/baseline-combined",
                      body = readLines("payload/validate_baseline_payload.json"))
   expect_equal(res$status, 200)
@@ -60,7 +64,9 @@ test_that("endpoint_validate_survey_programme programme", {
 })
 
 test_that("endpoint_validate_survey_programme works with programme data", {
-  api <- api_build()
+  test_redis_available()
+  queue <- test_queue(workers = 0)
+  api <- api_build(queue)
   res <- api$request("POST", "/validate/survey-and-programme",
                      body =
                        readLines("payload/validate_programme_payload.json"))
@@ -90,7 +96,9 @@ test_that("endpoint_validate_survey_programme anc", {
 })
 
 test_that("endpoint_validate_survey_programme works with anc data", {
-  api <- api_build()
+  test_redis_available()
+  queue <- test_queue(workers = 0)
+  api <- api_build(queue)
   res <- api$request("POST", "/validate/survey-and-programme",
                      body = readLines("payload/validate_anc_payload.json"))
   expect_equal(res$status, 200)
@@ -119,7 +127,9 @@ test_that("endpoint_validate_survey_programme survey", {
 })
 
 test_that("endpoint_validate_survey_programme works with survey data", {
-  api <- api_build()
+  test_redis_available()
+  queue <- test_queue(workers = 0)
+  api <- api_build(queue)
   res <- api$request("POST", "/validate/survey-and-programme",
                      body = readLines("payload/validate_survey_payload.json"))
   expect_equal(res$status, 200)
@@ -237,7 +247,9 @@ test_that("endpoint_model_options", {
 })
 
 test_that("endpoint_model_options works", {
-  api <- api_build()
+  test_redis_available()
+  queue <- test_queue(workers = 0)
+  api <- api_build(queue)
   res <- api$request("POST", "/model/options",
                      body = readLines("payload/model_run_options_payload.json"))
   expect_equal(res$status, 200)
@@ -549,7 +561,9 @@ test_that("endpoint_plotting_metadata can be run", {
 })
 
 test_that("api can call endpoint_plotting_metadata", {
-  api <- api_build()
+  test_redis_available()
+  queue <- test_queue(workers = 0)
+  api <- api_build(queue)
   res <- api$request("GET", "/meta/plotting/MWI")
   expect_equal(res$status, 200)
   body <- jsonlite::fromJSON(res$body)
