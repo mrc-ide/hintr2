@@ -863,7 +863,6 @@ test_that("api can call endpoint_model_debug", {
 test_that("endpoint_hintr_version works", {
   endpoint <- endpoint_hintr_version()
   response <- endpoint$run()
-  response <- jsonlite::parse_json(response)
 
   expect_is(response$data, "list")
   expect_setequal(names(response$data), c("hintr", "naomi", "rrq", "traduire"))
