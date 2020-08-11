@@ -20,8 +20,10 @@ Imports:
     pkgapi (>= 0.0.8),
     traduire (>= 0.0.5)
 Suggests:
+    ids,
     mockery,
     R6,
     redux,
     testthat,
-    withr
+    withr,
+    zip
