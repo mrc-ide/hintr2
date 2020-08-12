@@ -8,7 +8,7 @@ test_that("endpoint model run queues a model run", {
   path <- setup_submit_payload()
 
   ## Call the endpoint
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
@@ -29,98 +29,91 @@ test_that("endpoint model run queues a model run", {
   expect_equal(status$progress[[2]]$name, scalar("Finished mock model"))
   expect_false(status$progress[[2]]$complete)
 
-  # ## Get the result
-  # res <- MockPlumberResponse$new()
-  # model_result <- endpoint_model_result(queue)
-  # result <- model_result(NULL, res, status$data$id)
-  # result <- jsonlite::parse_json(result)
-  # expect_equal(res$status, 200)
-  # expect_equal(names(result$data), c("data", "plottingMetadata"))
-  # expect_equal(names(result$data$data[[1]]),
-  #              c("area_id", "sex", "age_group", "calendar_quarter",
-  #                "indicator_id", "mode", "mean", "lower", "upper"))
-  # expect_true(length(result$data$data) > 84042)
-  # expect_equal(names(result$data$plottingMetadata), c("barchart", "choropleth"))
-  #
-  #
-  # ## Barchart
-  # barchart <- result$data$plottingMetadata$barchart
-  # expect_equal(names(barchart), c("indicators", "filters", "defaults"))
-  # expect_length(barchart$filters, 4)
-  # expect_equal(names(barchart$filters[[1]]),
-  #              c("id", "column_id", "label", "options", "use_shape_regions"))
-  # expect_equal(names(barchart$filters[[2]]),
-  #              c("id", "column_id", "label", "options"))
-  # ## Choropleth has the correct filters in correct order
-  # filters <- lapply(barchart$filters, function(filter) {
-  #   filter$column_id
-  # })
-  # expect_equal(filters[[1]], "area_id")
-  # expect_equal(filters[[2]], "calendar_quarter")
-  # expect_equal(filters[[3]], "sex")
-  # expect_equal(filters[[4]], "age_group")
-  # expect_length(barchart$filters[[2]]$options, 3)
-  # expect_equal(barchart$filters[[2]]$options[[2]]$id, "CY2018Q3")
-  # expect_equal(barchart$filters[[2]]$options[[2]]$label, "September 2018")
-  # expect_true(length(barchart$filters[[4]]$options) >= 29)
-  # expect_length(barchart$indicators, 10)
-  #
-  # ## Quarters are in descending order
-  # calendar_quarters <-
-  #   lapply(barchart$filters[[2]]$options, function(option) {
-  #     option$id
-  #   })
-  # expect_equal(unlist(calendar_quarters),
-  #              sort(unlist(calendar_quarters), decreasing = TRUE))
-  #
-  #
-  # ## Barchart indicators are in numeric id order
-  # indicators <- lapply(barchart$indicators, function(indicator) {
-  #   indicator$indicator
-  # })
-  # expect_equal(unlist(indicators),
-  #              c("population", "prevalence", "plhiv", "art_coverage",
-  #                "current_art", "receiving_art", "incidence", "new_infections",
-  #                "anc_prevalence", "anc_art_coverage"))
-  #
-  # ## Choropleth
-  # choropleth <- result$data$plottingMetadata$choropleth
-  # expect_equal(names(choropleth), c("indicators", "filters"))
-  # expect_length(choropleth$filters, 4)
-  # expect_equal(names(choropleth$filters[[1]]),
-  #              c("id", "column_id", "label", "options", "use_shape_regions"))
-  # expect_equal(names(choropleth$filters[[2]]),
-  #              c("id", "column_id", "label", "options"))
-  # ## Choropleth has the correct filters in correct order
-  # filters <- lapply(choropleth$filters, function(filter) {
-  #   filter$column_id
-  # })
-  # expect_equal(filters[[1]], "area_id")
-  # expect_equal(filters[[2]], "calendar_quarter")
-  # expect_equal(filters[[3]], "sex")
-  # expect_equal(filters[[4]], "age_group")
-  # expect_length(choropleth$filters[[2]]$options, 3)
-  # expect_equal(choropleth$filters[[2]]$options[[2]]$id, "CY2018Q3")
-  # expect_equal(choropleth$filters[[2]]$options[[2]]$label, "September 2018")
-  # expect_true(length(choropleth$filters[[4]]$options) >= 29)
-  # expect_length(choropleth$indicators, 10)
-  #
-  # ## Quarters are in descending order
-  # calendar_quarters <-
-  #   lapply(choropleth$filters[[2]]$options, function(option) {
-  #     option$id
-  #   })
-  # expect_equal(unlist(calendar_quarters),
-  #              sort(unlist(calendar_quarters), decreasing = TRUE))
-  #
-  # ## Choropleth indicators are in numeric id order
-  # indicators <- lapply(choropleth$indicators, function(indicator) {
-  #   indicator$indicator
-  # })
-  # expect_equal(unlist(indicators),
-  #              c("population", "prevalence", "plhiv", "art_coverage",
-  #                "current_art", "receiving_art", "incidence", "new_infections",
-  #                "anc_prevalence", "anc_art_coverage"))
+  ## Get the result
+  get_model_result <- model_result(queue)
+  result <- get_model_result(response$id)
+  expect_equal(names(result), c("data", "plottingMetadata"))
+  expect_equal(colnames(result$data),
+               c("area_id", "sex", "age_group", "calendar_quarter",
+                 "indicator_id", "mode", "mean", "lower", "upper"))
+  expect_true(nrow(result$data) > 84042)
+  expect_equal(names(result$plottingMetadata), c("barchart", "choropleth"))
+
+
+  ## Barchart
+  barchart <- result$plottingMetadata$barchart
+  expect_equal(names(barchart), c("indicators", "filters", "defaults"))
+  expect_length(barchart$filters, 4)
+  expect_equal(names(barchart$filters[[1]]),
+               c("id", "column_id", "label", "options", "use_shape_regions"))
+  expect_equal(names(barchart$filters[[2]]),
+               c("id", "column_id", "label", "options"))
+  ## Choropleth has the correct filters in correct order
+  filters <- lapply(barchart$filters, function(filter) {
+    filter$column_id
+  })
+  expect_equal(filters[[1]], scalar("area_id"))
+  expect_equal(filters[[2]], scalar("calendar_quarter"))
+  expect_equal(filters[[3]], scalar("sex"))
+  expect_equal(filters[[4]], scalar("age_group"))
+  expect_length(barchart$filters[[2]]$options, 3)
+  expect_equal(barchart$filters[[2]]$options[[2]]$id, scalar("CY2018Q3"))
+  expect_equal(barchart$filters[[2]]$options[[2]]$label,
+               scalar("September 2018"))
+  expect_true(length(barchart$filters[[4]]$options) >= 29)
+  expect_equal(nrow(barchart$indicators), 10)
+
+  ## Quarters are in descending order
+  calendar_quarters <-
+    lapply(barchart$filters[[2]]$options, function(option) {
+      option$id
+    })
+  expect_equal(unlist(calendar_quarters),
+               sort(unlist(calendar_quarters), decreasing = TRUE))
+
+
+  ## Barchart indicators are in numeric id order
+  expect_equal(barchart$indicators$indicator,
+               c("population", "prevalence", "plhiv", "art_coverage",
+                 "current_art", "receiving_art", "incidence", "new_infections",
+                 "anc_prevalence", "anc_art_coverage"))
+
+  ## Choropleth
+  choropleth <- result$plottingMetadata$choropleth
+  expect_equal(names(choropleth), c("indicators", "filters"))
+  expect_length(choropleth$filters, 4)
+  expect_equal(names(choropleth$filters[[1]]),
+               c("id", "column_id", "label", "options", "use_shape_regions"))
+  expect_equal(names(choropleth$filters[[2]]),
+               c("id", "column_id", "label", "options"))
+  ## Choropleth has the correct filters in correct order
+  filters <- lapply(choropleth$filters, function(filter) {
+    filter$column_id
+  })
+  expect_equal(filters[[1]], scalar("area_id"))
+  expect_equal(filters[[2]], scalar("calendar_quarter"))
+  expect_equal(filters[[3]], scalar("sex"))
+  expect_equal(filters[[4]], scalar("age_group"))
+  expect_length(choropleth$filters[[2]]$options, 3)
+  expect_equal(choropleth$filters[[2]]$options[[2]]$id, scalar("CY2018Q3"))
+  expect_equal(choropleth$filters[[2]]$options[[2]]$label,
+               scalar("September 2018"))
+  expect_true(length(choropleth$filters[[4]]$options) >= 29)
+  expect_equal(nrow(choropleth$indicators), 10)
+
+  ## Quarters are in descending order
+  calendar_quarters <-
+    lapply(choropleth$filters[[2]]$options, function(option) {
+      option$id
+    })
+  expect_equal(unlist(calendar_quarters),
+               sort(unlist(calendar_quarters), decreasing = TRUE))
+
+  ## Choropleth indicators are in numeric id order
+  expect_equal(choropleth$indicators$indicator,
+               c("population", "prevalence", "plhiv", "art_coverage",
+                 "current_art", "receiving_art", "incidence", "new_infections",
+                 "anc_prevalence", "anc_art_coverage"))
 })
 
 test_that("endpoint_run_model returns error if queueing fails", {
@@ -153,7 +146,7 @@ test_that("running model with old version throws an error", {
                                }')
 
   ## Call the endpoint
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_submit <- submit_model(queue)
   error <- expect_error(model_submit(readLines(path)))
 
@@ -191,7 +184,54 @@ test_that("endpoint_run_status returns error if query for status fails", {
   expect_equal(error$status_code, 400)
 })
 
+test_that("querying for result of missing job returns useful error", {
+  test_redis_available()
+
+  queue <- test_queue()
+  get_model_result <- model_result(queue)
+  error <- expect_error(get_model_result("ID"))
+  expect_equal(error$data[[1]]$error, scalar("FAILED_TO_RETRIEVE_RESULT"))
+  expect_equal(error$data[[1]]$detail, scalar("Failed to fetch result"))
+  expect_equal(error$status_code, 400)
+})
+
+test_that("querying for an orphan task returns sensible error", {
+  test_redis_available()
+
+  queue <- test_queue()
+  id <- ids::random_id()
+  queue$queue$con$HSET(queue$queue$keys$task_status, id, "ORPHAN")
+  get_model_result <- model_result(queue)
+  error <- expect_error(get_model_result(id))
+
+  expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
+  expect_equal(error$data[[1]]$detail,
+               scalar("Worker has crashed - error details are unavailable"))
+  expect_equal(error$status_code, 400)
+})
+
+test_that("querying for result of incomplete jobs returns useful error", {
+  test_redis_available()
+  test_mock_model_available()
+
+  path <- setup_submit_payload()
+  queue <- test_queue(workers = 1)
+  model_submit <- submit_model(queue)
+  response <- model_submit(readLines(path))
+  expect_true("id" %in% names(response))
+
+  ## Get result prematurely
+  get_model_result <- model_result(queue)
+  error <- expect_error(get_model_result(response$id))
+
+  expect_equal(error$data[[1]]$error, scalar("FAILED_TO_RETRIEVE_RESULT"))
+  expect_equal(error$data[[1]]$detail,
+               scalar("Failed to fetch result"))
+  expect_equal(error$status_code, 400)
+})
+
 test_that("erroring model run returns useful messages", {
+  skip("Returning trace in errors not implemented yet see RESIDE-176")
   test_redis_available()
 
   ## Call the endpoint
@@ -210,30 +250,155 @@ test_that("erroring model run returns useful messages", {
   expect_equal(status$success, scalar(FALSE))
   expect_equal(status$id, response$id)
 
-  ## Get the result
-  # model_result <- endpoint_model_result(queue)
-  # result <- model_result(req, res, response$data$id)
-  # result_parsed <- jsonlite::parse_json(result)
-  # expect_equal(res$status, 400)
-  #
-  # expect_equal(result_parsed$status, "failure")
-  # expect_length(result_parsed$data, 0)
-  # expect_length(result_parsed$errors, 1)
-  # expect_equal(result_parsed$errors[[1]]$error, "MODEL_RUN_FAILED")
-  # expect_equal(result_parsed$errors[[1]]$detail, "test error")
-  #
-  # trace <- vcapply(result_parsed$errors[[1]]$trace, identity)
-  # expect_true("rrq:::rrq_worker_main()" %in% trace)
-  # expect_true("stop(\"test error\")" %in% trace)
-  # expect_match(trace[[1]], "^# [[:xdigit:]]+$")
-  #
-  # ## Check logging:
-  # res$headers[["Content-Type"]] <- "application/json"
-  # res$body <- result
-  # res$status <- 400
-  # msg <- capture_messages(
-  #   api_log_end(NULL, NULL, res, NULL))
-  # expect_match(msg[[1]], "error-key: [a-z]{5}-[a-z]{5}-[a-z]{5}")
-  # expect_match(msg[[2]], "error-detail: test error")
-  # expect_match(msg[[3]], "error-trace: rrq:::rrq_worker_main")
+  # Get the result
+  get_model_result <- model_result(queue)
+  error <- expect_error(get_model_result(response$id))
+
+  expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
+  expect_equal(error$data[[1]]$detail,
+               scalar("test error"))
+  expect_equal(error$status_code, 400)
+
+
+  # Get the result
+  get_model_result <- model_result(queue)
+  error <- expect_error(get_model_result(response$id))
+  result <- model_result(req, res, response$data$id)
+  result_parsed <- jsonlite::parse_json(result)
+  expect_equal(res$status, 400)
+
+  expect_equal(result_parsed$status, "failure")
+  expect_length(result_parsed$data, 0)
+  expect_length(result_parsed$errors, 1)
+  expect_equal(result_parsed$errors[[1]]$error, "MODEL_RUN_FAILED")
+  expect_equal(result_parsed$errors[[1]]$detail, "test error")
+
+  trace <- vcapply(result_parsed$errors[[1]]$trace, identity)
+  expect_true("rrq:::rrq_worker_main()" %in% trace)
+  expect_true("stop(\"test error\")" %in% trace)
+  expect_match(trace[[1]], "^# [[:xdigit:]]+$")
+
+  ## Check logging:
+  res$headers[["Content-Type"]] <- "application/json"
+  res$body <- result
+  res$status <- 400
+  msg <- capture_messages(
+    hintr:::api_log_end(NULL, NULL, res, NULL))
+  expect_match(msg[[1]], "error-key: [a-z]{5}-[a-z]{5}-[a-z]{5}")
+  expect_match(msg[[2]], "error-detail: test error")
+  expect_match(msg[[3]], "error-trace: rrq:::rrq_worker_main")
 })
+
+test_that("model run can be cancelled", {
+  test_redis_available()
+  test_mock_model_available()
+
+  ## Start the model running
+  path <- setup_submit_payload()
+  queue <- test_queue(workers = 1)
+  model_submit <- submit_model(queue)
+  response <- model_submit(readLines(path))
+  expect_true("id" %in% names(response))
+  id <- response$id
+
+  running <- queue$queue$worker_task_id()
+  expect_equal(scalar(unname(running)), id)
+  worker <- names(running)
+  expect_equal(queue$queue$task_status(id), setNames("RUNNING", id))
+
+  ## Cancel the run
+  cancel_model <- model_cancel(queue)
+  response <- cancel_model(id)
+  expect_equal(response, json_null())
+
+  testthat::try_again(5, {
+    Sys.sleep(1)
+    log <- queue$queue$worker_log_tail(worker, n = Inf)
+    expect_true("INTERRUPT" %in% log$command)
+    expect_equal(queue$queue$task_status(id), setNames("INTERRUPTED", id))
+  })
+
+  get_status <- model_status(queue)
+  response <- get_status(id)
+  expect_true(response$done)
+  expect_false(response$success)
+  expect_equal(response$status, scalar("INTERRUPTED"))
+
+  get_result <- model_result(queue)
+  error <- expect_error(get_result(id))
+  expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
+  expect_equal(error$data[[1]]$detail,
+               scalar("Model run was cancelled by user"))
+  expect_equal(error$status_code, 400)
+})
+
+test_that("failed cancel sends reasonable message", {
+  test_redis_available()
+  test_mock_model_available()
+  ## Create request data
+  queue <- test_queue()
+  cancel_model <- model_cancel(queue)
+
+  id <- ids::random_id()
+  error <- expect_error(cancel_model(id))
+
+  ## TODO: translate the message ideally - requires some work in rrq
+  ## though.
+  expect_equal(error$data[[1]]$error, scalar("FAILED_TO_CANCEL"))
+  expect_match(error$data[[1]]$detail,
+               scalar("Task [[:xdigit:]]+ is not running \\(MISSING\\)"))
+  expect_equal(error$status_code, 400)
+
+  skip("TODO: return key see RESIDE-176")
+  expect_is(response$errors[[1]]$key, "character")
+})
+
+test_that("Debug endpoint returns debug information", {
+  test_redis_available()
+  test_mock_model_available()
+
+  ## Start the model running
+  path <- setup_submit_payload()
+  queue <- test_queue(workers = 1)
+  model_submit <- submit_model(queue)
+  response <- model_submit(readLines(path))
+  expect_true("id" %in% names(response))
+  id <- response$id
+
+  model_debug <- download_debug(queue)
+  bin <- model_debug(id)
+  tmp <- tempfile()
+  dest <- tempfile()
+  writeBin(as.vector(bin), tmp)
+  zip::unzip(tmp, exdir = dest)
+  expect_equal(scalar(dir(dest)), id)
+  expect_setequal(
+    dir(file.path(dest, id)),
+    c("data.rds", "files"))
+  info <- readRDS(file.path(dest, id, "data.rds"))
+  ## Smoke test options are passed through
+  expect_true(length(info$objects$options) > 25)
+  expect_true(list(area_scope = "MWI") %in% info$objects$options)
+  expect_is(info$sessionInfo, "sessionInfo")
+  expect_equal(names(info$objects$data),
+               c("pjnz", "shape", "population", "survey", "programme", "anc"))
+  expect_equal(names(info$objects$data$pjnz), c("path", "hash", "filename"))
+  expect_setequal(
+    dir(file.path(dest, id, "files")),
+    c("anc.csv", "malawi.geojson", "Malawi2019.PJNZ", "population.csv",
+      "programme.csv", "survey.csv"))
+})
+
+
+test_that("Debug endpoint errors on nonexistant id", {
+  test_redis_available()
+  queue <- test_queue()
+  model_debug <- download_debug(queue)
+
+  error <- expect_error(model_debug("1234"))
+  expect_equal(error$data[[1]]$error, scalar("INVALID_TASK"))
+  expect_equal(error$data[[1]]$detail,
+               scalar("Task '1234' not found"))
+  expect_equal(error$status_code, 400)
+})
+

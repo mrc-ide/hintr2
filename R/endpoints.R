@@ -93,7 +93,7 @@ submit_model <- function(queue) {
   function(input) {
     input <- jsonlite::fromJSON(input)
     if (!hintr:::is_current_version(input$version)) {
-      pkgapi::pkgapi_stop(t_("MODEL_SUBMIT_OLD", package = "hintr"),
+      pkgapi::pkgapi_stop(tr_("MODEL_SUBMIT_OLD"),
                           "VERSION_OUT_OF_DATE")
     }
     tryCatch(
@@ -115,6 +115,39 @@ model_status <- function(queue) {
     },
     error = function(e) {
       pkgapi::pkgapi_stop(e$message, "FAILED_TO_RETRIEVE_STATUS")
+    })
+  }
+}
+
+model_result <- function(queue) {
+  function(id) {
+    task_status <- queue$queue$task_status(id)
+    if (task_status == "COMPLETE") {
+      hintr:::process_result(queue$result(id))
+    } else if (task_status == "ERROR") {
+      result <- queue$result(id)
+      trace <- c(sprintf("# %s", id), result$trace)
+      error_data <- structure(result$message, trace = trace)
+      pkgapi::pkgapi_stop(error_data, "MODEL_RUN_FAILED")
+    } else if (task_status == "ORPHAN") {
+      pkgapi::pkgapi_stop(tr_("MODEL_RESULT_CRASH"), "MODEL_RUN_FAILED")
+    } else if (task_status == "INTERRUPTED") {
+      pkgapi::pkgapi_stop(tr_("MODEL_RUN_CANCELLED"), "MODEL_RUN_FAILED")
+    } else { # ~= MISSING, PENDING, RUNNING
+      pkgapi::pkgapi_stop(tr_("MODEL_RESULT_MISSING"),
+                          "FAILED_TO_RETRIEVE_RESULT")
+    }
+  }
+}
+
+model_cancel <- function(queue) {
+  function(id) {
+    tryCatch({
+      queue$cancel(id)
+      json_null()
+    },
+    error = function(e) {
+      pkgapi::pkgapi_stop(e$message, "FAILED_TO_CANCEL")
     })
   }
 }
@@ -164,4 +197,50 @@ download <- function(queue, type, filename) {
   }
 }
 
+download_debug <- function(queue) {
+  function(id) {
+    tryCatch({
+      data <- queue$queue$task_data(id)
+      files <- unique(unlist(lapply(data$objects$data, function(x) {
+        if (!is.null(x)) {
+          x$path
+        }
+      }), FALSE, FALSE))
+      tmp <- tempfile()
+      path <- file.path(tmp, id)
+      dir.create(path, FALSE, TRUE)
 
+      data$sessionInfo <- utils::sessionInfo()
+      data$objects$data <- lapply(data$objects$data, function(x) {
+        if (!is.null(x)) {
+          list(path = basename(x$path), hash = x$hash, filename = x$filename)
+        }
+      })
+
+      path_files <- file.path(path, "files")
+      dir.create(path_files)
+      hintr:::file_copy(files, file.path(path_files, basename(files)))
+      saveRDS(data, file.path(path, "data.rds"))
+
+      on.exit(unlink(tmp, recursive = TRUE))
+
+      dest <- paste0(id, ".zip")
+      withr::with_dir(tmp, zip::zipr(dest, id))
+
+      path <- file.path(tmp, dest)
+      bytes <- readBin(path, "raw", n = file.size(path))
+      bytes <- pkgapi::pkgapi_add_headers(bytes, list(
+        "Content-Disposition" =
+          sprintf('attachment; filename="%s_%s_naomi_debug.zip"',
+                  id, hintr:::iso_time_str())))
+      bytes
+    },
+    error = function(e) {
+      if (is_pkgapi_error(e)) {
+        stop(e)
+      } else {
+        pkgapi::pkgapi_stop(e$message, "INVALID_TASK")
+      }
+    })
+  }
+}

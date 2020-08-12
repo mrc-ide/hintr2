@@ -392,7 +392,7 @@ test_that("api can call endpoint_model_submit", {
 test_that("endpoint_model_status can be run", {
   test_redis_available()
   test_mock_model_available()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_run <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- model_run$run(readLines(path))
@@ -418,7 +418,7 @@ test_that("endpoint_model_status can be run", {
 test_that("api can call endpoint_model_status", {
   test_redis_available()
   test_mock_model_available()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
   path <- setup_submit_payload()
   res <- api$request("POST", "/model/submit",
@@ -444,6 +444,98 @@ test_that("api can call endpoint_model_status", {
   expect_true(body$data$progress[1, "complete"])
   expect_equal(body$data$progress[2, "name"], "Finished mock model")
   expect_false(body$data$progress[2, "complete"])
+})
+
+test_that("endpoint_model_result can be run", {
+  test_redis_available()
+  test_mock_model_available()
+  queue <- test_queue(workers = 1)
+  model_run <- endpoint_model_submit(queue)
+  path <- setup_submit_payload()
+  run_response <- model_run$run(readLines(path))
+  expect_equal(run_response$status_code, 200)
+  expect_true(!is.null(run_response$data$id))
+
+  endpoint <- endpoint_model_result(queue)
+  out <- queue$queue$task_wait(run_response$data$id)
+  response <- endpoint$run(run_response$data$id)
+
+  expect_equal(response$status_code, 200)
+  expect_equal(names(response$data), c("data", "plottingMetadata"))
+  expect_equal(colnames(response$data$data),
+               c("area_id", "sex", "age_group", "calendar_quarter",
+                 "indicator_id", "mode", "mean", "lower", "upper"))
+  expect_true(nrow(response$data$data) > 84042)
+  expect_equal(names(response$data$plottingMetadata),
+               c("barchart", "choropleth"))
+})
+
+test_that("api can call endpoint_model_result", {
+  test_redis_available()
+  test_mock_model_available()
+  queue <- test_queue(workers = 1)
+  api <- api_build(queue)
+  path <- setup_submit_payload()
+  res <- api$request("POST", "/model/submit",
+                     body = readLines(path))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_true(!is.null(body$data$id))
+
+  out <- queue$queue$task_wait(body$data$id)
+  res <- api$request("GET", sprintf("/model/result/%s", body$data$id))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+
+  expect_equal(body$status, "success")
+  expect_null(body$errors)
+  expect_equal(names(body$data), c("data", "plottingMetadata"))
+  expect_equal(colnames(body$data$data),
+               c("area_id", "sex", "age_group", "calendar_quarter",
+                 "indicator_id", "mode", "mean", "lower", "upper"))
+  expect_true(nrow(body$data$data) > 84042)
+  expect_equal(names(body$data$plottingMetadata),
+               c("barchart", "choropleth"))
+})
+
+test_that("endpoint_model_cancel can be run", {
+  test_redis_available()
+  test_mock_model_available()
+  queue <- test_queue(workers = 1)
+  model_run <- endpoint_model_submit(queue)
+  path <- setup_submit_payload()
+  run_response <- model_run$run(readLines(path))
+  expect_equal(run_response$status_code, 200)
+  expect_true(!is.null(run_response$data$id))
+
+  endpoint <- endpoint_model_cancel(queue)
+  response <- endpoint$run(run_response$data$id)
+
+  expect_equal(response$status_code, 200)
+  expect_equal(response$data, json_null())
+})
+
+test_that("api can call endpoint_model_cancel", {
+  test_redis_available()
+  test_mock_model_available()
+  queue <- test_queue(workers = 1)
+  api <- api_build(queue)
+  path <- setup_submit_payload()
+  res <- api$request("POST", "/model/submit",
+                     body = readLines(path))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+  expect_equal(body$status, "success")
+  expect_true(!is.null(body$data$id))
+
+  res <- api$request("GET", sprintf("/model/cancel/%s", body$data$id))
+  expect_equal(res$status, 200)
+  body <- jsonlite::fromJSON(res$body)
+
+  expect_equal(body$status, "success")
+  expect_null(body$errors)
+  expect_null(body$data)
 })
 
 test_that("endpoint_plotting_metadata can be run", {
@@ -502,7 +594,7 @@ test_that("endpoint_download_spectrum can be run", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   run_endpoint <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- run_endpoint$run(readLines(path))
@@ -529,7 +621,7 @@ test_that("api can call endpoint_download_spectrum", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
 
   ## Run the model
@@ -561,7 +653,7 @@ test_that("endpoint_download_summary can be run", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   run_endpoint <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- run_endpoint$run(readLines(path))
@@ -589,7 +681,7 @@ test_that("api can call endpoint_download_summary", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
 
   ## Run the model
@@ -629,7 +721,7 @@ test_that("endpoint_download_spectrum_head returns headers only", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   run_endpoint <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- run_endpoint$run(readLines(path))
@@ -650,7 +742,7 @@ test_that("api endpoint_download_spectrum_head returns headers only", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
 
   ## Run the model
@@ -676,7 +768,7 @@ test_that("endpoint_download_summary_head returns headers only", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   run_endpoint <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- run_endpoint$run(readLines(path))
@@ -698,7 +790,7 @@ test_that("api endpoint_download_summary_head returns headers only", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
 
   ## Run the model
@@ -719,4 +811,51 @@ test_that("api endpoint_download_summary_head returns headers only", {
     'attachment; filename="MWI_\\d+-\\d+_naomi_coarse_age_groups.zip"')
   ## Plumber uses an empty string to represent an empty body
   expect_equal(res$body, "")
+})
+
+test_that("endpoint_model_debug can be run", {
+  test_redis_available()
+  test_mock_model_available()
+
+  queue <- test_queue(workers = 1)
+  run_endpoint <- endpoint_model_submit(queue)
+  path <- setup_submit_payload()
+  run_response <- run_endpoint$run(readLines(path))
+  expect_equal(run_response$status_code, 200)
+  out <- queue$queue$task_wait(run_response$data$id)
+
+  endpoint <- endpoint_model_debug(queue)
+  response <- endpoint$run(run_response$data$id)
+
+  expect_equal(response$status_code, 200)
+  expect_match(response$headers$`Content-Disposition`,
+               'attachment; filename="\\w+_\\d+-\\d+_naomi_debug.zip"')
+  ## Download contains data
+  expect_true(length(response$data) > 1000000)
+})
+
+test_that("api can call endpoint_model_debug", {
+  test_redis_available()
+  test_mock_model_available()
+
+  queue <- test_queue(workers = 1)
+  api <- api_build(queue)
+
+  ## Run the model
+  path <- setup_submit_payload()
+  res <- api$request("POST", "/model/submit",
+                     body = readLines(path))
+  expect_equal(res$status, 200)
+  response <- jsonlite::fromJSON(res$body)
+  out <- queue$queue$task_wait(response$data$id)
+
+  ## Get result
+  res <- api$request("GET", paste0("/model/debug/", response$data$id))
+
+  expect_equal(res$status, 200)
+  expect_equal(res$headers$`Content-Type`, "application/octet-stream")
+  expect_match(res$headers$`Content-Disposition`,
+               'attachment; filename="\\w+_\\d+-\\d+_naomi_debug.zip"')
+  ## Download contains data
+  expect_true(length(res$body) > 1000000)
 })
