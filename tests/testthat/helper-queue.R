@@ -17,7 +17,7 @@ MockQueue <- R6::R6Class(
   )
 )
 
-test_queue <- function(workers = 2) {
+test_queue <- function(workers = 0) {
   queue <- hintr:::Queue$new(workers = workers)
   withr::defer_parent({
     message("cleaning up workers")

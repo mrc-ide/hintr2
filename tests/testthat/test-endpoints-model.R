@@ -8,7 +8,7 @@ test_that("endpoint model run queues a model run", {
   path <- setup_submit_payload()
 
   ## Call the endpoint
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
@@ -146,7 +146,7 @@ test_that("running model with old version throws an error", {
                                }')
 
   ## Call the endpoint
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_submit <- submit_model(queue)
   error <- expect_error(model_submit(readLines(path)))
 
@@ -198,7 +198,7 @@ test_that("querying for result of missing job returns useful error", {
 test_that("querying for an orphan task returns sensible error", {
   test_redis_available()
 
-  queue <- test_queue(workers = 0)
+  queue <- test_queue()
   id <- ids::random_id()
   queue$queue$con$HSET(queue$queue$keys$task_status, id, "ORPHAN")
   get_model_result <- model_result(queue)
@@ -215,7 +215,7 @@ test_that("querying for result of incomplete jobs returns useful error", {
   test_mock_model_available()
 
   path <- setup_submit_payload()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
@@ -295,7 +295,7 @@ test_that("model run can be cancelled", {
 
   ## Start the model running
   path <- setup_submit_payload()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
@@ -359,7 +359,7 @@ test_that("Debug endpoint returns debug information", {
 
   ## Start the model running
   path <- setup_submit_payload()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
