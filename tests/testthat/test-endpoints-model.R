@@ -231,7 +231,6 @@ test_that("querying for result of incomplete jobs returns useful error", {
 })
 
 test_that("erroring model run returns useful messages", {
-  skip("Returning trace in errors not implemented yet see RESIDE-176")
   test_redis_available()
 
   ## Call the endpoint
@@ -254,30 +253,19 @@ test_that("erroring model run returns useful messages", {
   get_model_result <- model_result(queue)
   error <- expect_error(get_model_result(response$id))
 
-  expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
-  expect_equal(error$data[[1]]$detail,
-               scalar("test error"))
   expect_equal(error$status_code, 400)
+  skip("Returning trace in errors not implemented yet see RESIDE-176")
+  expect_equal(names(error$data[[1]]), c("error", "detail", "key", "trace"))
+  expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
+  expect_equal(error$data[[1]]$detail, scalar("test error"))
+  expect_equal(error$data[[1]]$key, scalar("some key"))
 
-
-  # Get the result
-  get_model_result <- model_result(queue)
-  error <- expect_error(get_model_result(response$id))
-  result <- model_result(req, res, response$data$id)
-  result_parsed <- jsonlite::parse_json(result)
-  expect_equal(res$status, 400)
-
-  expect_equal(result_parsed$status, "failure")
-  expect_length(result_parsed$data, 0)
-  expect_length(result_parsed$errors, 1)
-  expect_equal(result_parsed$errors[[1]]$error, "MODEL_RUN_FAILED")
-  expect_equal(result_parsed$errors[[1]]$detail, "test error")
-
-  trace <- vcapply(result_parsed$errors[[1]]$trace, identity)
+  trace <- vcapply(error$data[[1]]$trace, identity)
   expect_true("rrq:::rrq_worker_main()" %in% trace)
   expect_true("stop(\"test error\")" %in% trace)
   expect_match(trace[[1]], "^# [[:xdigit:]]+$")
 
+  skip("Logging not yet working see mrc-1683")
   ## Check logging:
   res$headers[["Content-Type"]] <- "application/json"
   res$body <- result

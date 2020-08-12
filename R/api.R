@@ -16,6 +16,9 @@ api_build <- function(queue) {
   api$handle(endpoint_download_spectrum_head(queue))
   api$handle(endpoint_download_summary(queue))
   api$handle(endpoint_download_summary_head(queue))
+  api$handle(endpoint_hintr_version())
+  api$handle(endpoint_hintr_worker_status(queue))
+  api$handle(endpoint_hintr_stop(queue))
   api
 }
 
@@ -233,5 +236,40 @@ endpoint_download_summary_head <- function(queue) {
                               "/download/summary/<id>",
                               download_summary(queue),
                               returning = returning_binary_head(),
+                              validate = FALSE)
+}
+
+endpoint_hintr_version <- function() {
+  response <- pkgapi::pkgapi_returning_json("HintrVersionResponse.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("GET",
+                              "/hintr/version",
+                              function() cfg$version_info,
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_hintr_worker_status <- function(queue) {
+  response <- pkgapi::pkgapi_returning_json("HintrWorkerStatus.schema",
+                                            schema_root())
+  pkgapi::pkgapi_endpoint$new("GET",
+                              "/hintr/worker/status",
+                              worker_status(queue),
+                              returning = response,
+                              validate = TRUE)
+}
+
+endpoint_hintr_stop <- function(queue) {
+  ## This endpoint calls hintr_stop which kills any workers and then calls stop.
+  ## It will never return anything so this won't ever be called in production,
+  ## it exists only so that when we mock hintr_stop this returns without errors
+  ## so we can effectively test.
+  returning <- pkgapi::pkgapi_returning(content_type = "application/json",
+                                        process = function(data) json_null(),
+                                        validate = function(body) TRUE)
+  pkgapi::pkgapi_endpoint$new("POST",
+                              "/hintr/stop",
+                              hintr_stop(queue),
+                              returning = returning,
                               validate = FALSE)
 }

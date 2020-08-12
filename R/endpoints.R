@@ -244,3 +244,19 @@ download_debug <- function(queue) {
     })
   }
 }
+
+worker_status <- function(queue) {
+  function() {
+    lapply(queue$queue$worker_status(), scalar)
+  }
+}
+
+hintr_stop <- function(queue) {
+  force(queue)
+  function() {
+    message("Stopping workers")
+    queue$queue$worker_stop()
+    message("Quitting hintr")
+    quit(save = "no")
+  }
+}
