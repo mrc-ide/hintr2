@@ -259,16 +259,17 @@ endpoint_hintr_worker_status <- function(queue) {
                               validate = TRUE)
 }
 
-pkgapi_returning_null <- function() {
-  pkgapi::pkgapi_returning(content_type = "text/plain",
-                           process = function(data) NULL,
-                           validate = function(body) TRUE)
-}
-
 endpoint_hintr_stop <- function(queue) {
+  ## This endpoint calls hintr_stop which kills any workers and then calls stop.
+  ## It will never return anything so this won't ever be called in production,
+  ## it exists only so that when we mock hintr_stop this returns without errors
+  ## so we can effectively test.
+  returning <- pkgapi::pkgapi_returning(content_type = "application/json",
+                                        process = function(data) json_null(),
+                                        validate = function(body) TRUE)
   pkgapi::pkgapi_endpoint$new("POST",
                               "/hintr/stop",
                               hintr_stop(queue),
-                              returning = pkgapi_returning_null(),
+                              returning = returning,
                               validate = FALSE)
 }
