@@ -16,7 +16,7 @@ validate_baseline <- function(input) {
     hintr:::input_response(validate_func(input$file), input$type, input$file)
   },
     error = function(e) {
-      pkgapi::pkgapi_stop(e$message, "INVALID_FILE")
+      hintr_error(e$message, "INVALID_FILE")
   })
 }
 
@@ -35,7 +35,7 @@ validate_baseline_combined <- function(input) {
                                  as_file_object(input$population))
   },
   error = function(e) {
-    pkgapi::pkgapi_stop(e$message, "INVALID_BASELINE")
+    hintr_error(e$message, "INVALID_BASELINE")
   })
 }
 
@@ -53,7 +53,7 @@ validate_survey_programme <- function(input) {
                            input$type, input$file)
   },
   error = function(e) {
-    pkgapi::pkgapi_stop(e$message, "INVALID_FILE")
+    hintr_error(e$message, "INVALID_FILE")
   })
 }
 
@@ -66,7 +66,7 @@ model_options <- function(input) {
       hintr:::do_endpoint_model_options(input$shape, input$survey,
                                         input$programme, input$anc))
   }, error = function(e) {
-    pkgapi::pkgapi_stop(e$message, "INVALID_OPTIONS")
+    hintr_error(e$message, "INVALID_OPTIONS")
   })
 }
 
@@ -85,7 +85,7 @@ model_options_validate <- function(input) {
     data <- naomi:::format_data_input(data)
     list(valid = scalar(naomi:::validate_model_options(data, input$options)))
   }, error = function(e) {
-    pkgapi::pkgapi_stop(e$message, "INVALID_OPTIONS")
+    hintr_error(e$message, "INVALID_OPTIONS")
   })
 }
 
@@ -93,13 +93,12 @@ submit_model <- function(queue) {
   function(input) {
     input <- jsonlite::fromJSON(input)
     if (!hintr:::is_current_version(input$version)) {
-      pkgapi::pkgapi_stop(tr_("MODEL_SUBMIT_OLD"),
-                          "VERSION_OUT_OF_DATE")
+      hintr_error(tr_("MODEL_SUBMIT_OLD"), "VERSION_OUT_OF_DATE")
     }
     tryCatch(
       list(id = scalar(queue$submit(input$data, input$options))),
       error = function(e) {
-        pkgapi::pkgapi_stop(e$message, "FAILED_TO_QUEUE")
+        hintr_error(e$message, "FAILED_TO_QUEUE")
       }
     )
   }
@@ -114,7 +113,7 @@ model_status <- function(queue) {
       hintr:::prepare_status_response(out, id)
     },
     error = function(e) {
-      pkgapi::pkgapi_stop(e$message, "FAILED_TO_RETRIEVE_STATUS")
+      hintr_error(e$message, "FAILED_TO_RETRIEVE_STATUS")
     })
   }
 }
@@ -129,12 +128,11 @@ model_result <- function(queue) {
       trace <- c(sprintf("# %s", id), result$trace)
       hintr_error(result$message, "MODEL_RUN_FAILED", trace = trace)
     } else if (task_status == "ORPHAN") {
-      pkgapi::pkgapi_stop(tr_("MODEL_RESULT_CRASH"), "MODEL_RUN_FAILED")
+      hintr_error(tr_("MODEL_RESULT_CRASH"), "MODEL_RUN_FAILED")
     } else if (task_status == "INTERRUPTED") {
-      pkgapi::pkgapi_stop(tr_("MODEL_RUN_CANCELLED"), "MODEL_RUN_FAILED")
+      hintr_error(tr_("MODEL_RUN_CANCELLED"), "MODEL_RUN_FAILED")
     } else { # ~= MISSING, PENDING, RUNNING
-      pkgapi::pkgapi_stop(tr_("MODEL_RESULT_MISSING"),
-                          "FAILED_TO_RETRIEVE_RESULT")
+      hintr_error(tr_("MODEL_RESULT_MISSING"), "FAILED_TO_RETRIEVE_RESULT")
     }
   }
 }
@@ -146,7 +144,7 @@ model_cancel <- function(queue) {
       json_null()
     },
     error = function(e) {
-      pkgapi::pkgapi_stop(e$message, "FAILED_TO_CANCEL")
+      hintr_error(e$message, "FAILED_TO_CANCEL")
     })
   }
 }
@@ -155,7 +153,7 @@ plotting_metadata <- function(iso3) {
   tryCatch(
     hintr:::do_plotting_metadata(iso3),
     error = function(e) {
-      pkgapi::pkgapi_stop(e$message, "FAILED_TO_GET_METADATA")
+      hintr_error(e$message, "FAILED_TO_GET_METADATA")
     }
   )
 }
@@ -173,7 +171,7 @@ download <- function(queue, type, filename) {
     tryCatch({
       res <- queue$result(id)
       if (hintr:::is_error(res)) {
-        pkgapi::pkgapi_stop(res$message, "MODEL_RUN_FAILED")
+        hintr_error(res$message, "MODEL_RUN_FAILED")
       }
       path <- switch(type,
                      "spectrum" = res$spectrum_path,
@@ -190,7 +188,7 @@ download <- function(queue, type, filename) {
       if (is_pkgapi_error(e)) {
         stop(e)
       } else {
-        pkgapi::pkgapi_stop(e$message, "FAILED_TO_RETRIEVE_RESULT")
+        hintr_error(e$message, "FAILED_TO_RETRIEVE_RESULT")
       }
     })
   }
@@ -238,7 +236,7 @@ download_debug <- function(queue) {
       if (is_pkgapi_error(e)) {
         stop(e)
       } else {
-        pkgapi::pkgapi_stop(e$message, "INVALID_TASK")
+        hintr_error(e$message, "INVALID_TASK")
       }
     })
   }
