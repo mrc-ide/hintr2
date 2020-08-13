@@ -127,8 +127,7 @@ model_result <- function(queue) {
     } else if (task_status == "ERROR") {
       result <- queue$result(id)
       trace <- c(sprintf("# %s", id), result$trace)
-      error_data <- structure(result$message, trace = trace)
-      pkgapi::pkgapi_stop(error_data, "MODEL_RUN_FAILED")
+      hintr_error(result$message, "MODEL_RUN_FAILED", trace = trace)
     } else if (task_status == "ORPHAN") {
       pkgapi::pkgapi_stop(tr_("MODEL_RESULT_CRASH"), "MODEL_RUN_FAILED")
     } else if (task_status == "INTERRUPTED") {
@@ -156,7 +155,7 @@ plotting_metadata <- function(iso3) {
   tryCatch(
     hintr:::do_plotting_metadata(iso3),
     error = function(e) {
-      pkgapi::pkgapi_stop("FAILED_TO_GET_METADATA", e$message)
+      pkgapi::pkgapi_stop(e$message, "FAILED_TO_GET_METADATA")
     }
   )
 }

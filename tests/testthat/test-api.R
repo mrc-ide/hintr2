@@ -563,7 +563,10 @@ test_that("erroring model run returns useful messages", {
   expect_equal(body$status, "success")
   expect_true(!is.null(body$data$id))
 
-  res <- api$request("GET", sprintf("/model/result/%s", body$data$id))
+  mock_id <- mockery::mock(scalar("fake_key"), cycle = TRUE)
+  with_mock("ids::proquint" = mock_id, {
+    res <- api$request("GET", sprintf("/model/result/%s", body$data$id))
+  })
   expect_equal(res$status, 400)
   body <- jsonlite::fromJSON(res$body)
 
@@ -572,14 +575,13 @@ test_that("erroring model run returns useful messages", {
   expect_true(nrow(body$errors) == 1)
   expect_equal(body$errors[1, "error"], "MODEL_RUN_FAILED")
   expect_equal(body$errors[1, "detail"], "test error")
-  skip("Error needs key and trace - see RESIDE-176")
-  expect_equal(body$errors[1, "key"], "some key")
-  expect_equal(body$errors[1, "trace"], "something ")
+  expect_equal(body$errors[1, "key"], "fake_key")
+  expect_true("rrq:::rrq_worker_main()" %in% body$errors[1, "trace"][[1]])
 
   ## Check logging:
   msg <- capture_messages(
     hintr:::api_log_end(NULL, NULL, res, NULL))
-  expect_match(msg[[1]], "error-key: [a-z]{5}-[a-z]{5}-[a-z]{5}")
+  expect_match(msg[[1]], "error-key: fake_key")
   expect_match(msg[[2]], "error-detail: test error")
   expect_match(msg[[3]], "error-trace: rrq:::rrq_worker_main")
 })
@@ -934,7 +936,7 @@ test_that("api can call endpoint_hintr_version", {
 test_that("endpoint_hintr_worker_status works", {
   test_redis_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 2)
   endpoint <- endpoint_hintr_worker_status(queue)
   response <- endpoint$run()
 
@@ -944,7 +946,7 @@ test_that("endpoint_hintr_worker_status works", {
 test_that("api can call endpoint_hintr_worker_status", {
   test_redis_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 2)
   api <- api_build(queue)
   res <- api$request("GET", "/hintr/worker/status")
   expect_equal(res$status, 200)

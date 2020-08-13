@@ -250,17 +250,19 @@ test_that("erroring model run returns useful messages", {
   expect_equal(status$id, response$id)
 
   # Get the result
-  get_model_result <- model_result(queue)
-  error <- expect_error(get_model_result(response$id))
+  mock_id <- mockery::mock(scalar("fake_key"), cycle = TRUE)
+  with_mock("ids::proquint" = mock_id, {
+    get_model_result <- model_result(queue)
+    error <- expect_error(get_model_result(response$id))
+  })
 
   expect_equal(error$status_code, 400)
-  skip("Returning trace in errors not implemented yet see RESIDE-176")
   expect_equal(names(error$data[[1]]), c("error", "detail", "key", "trace"))
   expect_equal(error$data[[1]]$error, scalar("MODEL_RUN_FAILED"))
   expect_equal(error$data[[1]]$detail, scalar("test error"))
-  expect_equal(error$data[[1]]$key, scalar("some key"))
+  expect_equal(error$data[[1]]$key, scalar("fake_key"))
 
-  trace <- vcapply(error$data[[1]]$trace, identity)
+  trace <- vapply(error$data[[1]]$trace, identity, character(1))
   expect_true("rrq:::rrq_worker_main()" %in% trace)
   expect_true("stop(\"test error\")" %in% trace)
   expect_match(trace[[1]], "^# [[:xdigit:]]+$")
@@ -324,10 +326,8 @@ test_that("failed cancel sends reasonable message", {
   expect_equal(error$data[[1]]$error, scalar("FAILED_TO_CANCEL"))
   expect_match(error$data[[1]]$detail,
                scalar("Task [[:xdigit:]]+ is not running \\(MISSING\\)"))
+  expect_is(error$data[[1]]$key, "character")
   expect_equal(error$status_code, 400)
-
-  skip("TODO: return key see RESIDE-176")
-  expect_is(response$errors[[1]]$key, "character")
 })
 
 test_that("Debug endpoint returns debug information", {

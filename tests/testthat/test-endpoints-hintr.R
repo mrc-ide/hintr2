@@ -1,6 +1,6 @@
 test_that("endpoint worker status works", {
   test_redis_available()
-  queue <- test_queue()
+  queue <- test_queue(workers = 2)
   status <- worker_status(queue)
 
   response <- status()
