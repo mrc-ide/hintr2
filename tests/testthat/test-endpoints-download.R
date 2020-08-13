@@ -8,7 +8,7 @@ test_that("indicator download returns bytes", {
   path <- setup_submit_payload()
 
   ## Run the model
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
@@ -29,7 +29,7 @@ test_that("spectrum download returns bytes", {
   path <- setup_submit_payload()
 
   ## Run the model
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_submit <- submit_model(queue)
   response <- model_submit(readLines(path))
   expect_true("id" %in% names(response))
@@ -54,7 +54,7 @@ test_that("download returns useful error if model run fails", {
 
   ## Run the model
   withr::with_envvar(c("USE_MOCK_MODEL" = "false"), {
-    queue <- test_queue()
+    queue <- test_queue(workers = 1)
     model_submit <- submit_model(queue)
     response <- model_submit(readLines(path))
     expect_true("id" %in% names(response))

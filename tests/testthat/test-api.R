@@ -404,7 +404,7 @@ test_that("api can call endpoint_model_submit", {
 test_that("endpoint_model_status can be run", {
   test_redis_available()
   test_mock_model_available()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_run <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- model_run$run(readLines(path))
@@ -430,7 +430,7 @@ test_that("endpoint_model_status can be run", {
 test_that("api can call endpoint_model_status", {
   test_redis_available()
   test_mock_model_available()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
   path <- setup_submit_payload()
   res <- api$request("POST", "/model/submit",
@@ -461,7 +461,7 @@ test_that("api can call endpoint_model_status", {
 test_that("endpoint_model_result can be run", {
   test_redis_available()
   test_mock_model_available()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_run <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- model_run$run(readLines(path))
@@ -485,7 +485,7 @@ test_that("endpoint_model_result can be run", {
 test_that("api can call endpoint_model_result", {
   test_redis_available()
   test_mock_model_available()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
   path <- setup_submit_payload()
   res <- api$request("POST", "/model/submit",
@@ -514,7 +514,7 @@ test_that("api can call endpoint_model_result", {
 test_that("endpoint_model_cancel can be run", {
   test_redis_available()
   test_mock_model_available()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   model_run <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- model_run$run(readLines(path))
@@ -528,10 +528,10 @@ test_that("endpoint_model_cancel can be run", {
   expect_equal(response$data, json_null())
 })
 
-test_that("api can call endpoint_model_result", {
+test_that("api can call endpoint_model_cancel", {
   test_redis_available()
   test_mock_model_available()
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
   path <- setup_submit_payload()
   res <- api$request("POST", "/model/submit",
@@ -642,7 +642,7 @@ test_that("endpoint_download_spectrum can be run", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   run_endpoint <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- run_endpoint$run(readLines(path))
@@ -669,7 +669,7 @@ test_that("api can call endpoint_download_spectrum", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
 
   ## Run the model
@@ -701,7 +701,7 @@ test_that("endpoint_download_summary can be run", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   run_endpoint <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- run_endpoint$run(readLines(path))
@@ -729,7 +729,7 @@ test_that("api can call endpoint_download_summary", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
 
   ## Run the model
@@ -769,7 +769,7 @@ test_that("endpoint_download_spectrum_head returns headers only", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   run_endpoint <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- run_endpoint$run(readLines(path))
@@ -790,7 +790,7 @@ test_that("api endpoint_download_spectrum_head returns headers only", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
 
   ## Run the model
@@ -816,7 +816,7 @@ test_that("endpoint_download_summary_head returns headers only", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   run_endpoint <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- run_endpoint$run(readLines(path))
@@ -838,7 +838,7 @@ test_that("api endpoint_download_summary_head returns headers only", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
 
   ## Run the model
@@ -865,7 +865,7 @@ test_that("endpoint_model_debug can be run", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   run_endpoint <- endpoint_model_submit(queue)
   path <- setup_submit_payload()
   run_response <- run_endpoint$run(readLines(path))
@@ -886,7 +886,7 @@ test_that("api can call endpoint_model_debug", {
   test_redis_available()
   test_mock_model_available()
 
-  queue <- test_queue()
+  queue <- test_queue(workers = 1)
   api <- api_build(queue)
 
   ## Run the model
