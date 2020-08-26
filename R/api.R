@@ -19,6 +19,8 @@ api_build <- function(queue) {
   api$handle(endpoint_hintr_version())
   api$handle(endpoint_hintr_worker_status(queue))
   api$handle(endpoint_hintr_stop(queue))
+  api$registerHook("preroute", hintr:::api_preroute)
+  api$registerHook("postserialize", hintr:::api_postserialize)
   api
 }
 
