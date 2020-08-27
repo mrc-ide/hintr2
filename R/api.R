@@ -21,6 +21,7 @@ api_build <- function(queue) {
   api$handle(endpoint_hintr_stop(queue))
   api$registerHook("preroute", hintr:::api_preroute)
   api$registerHook("postserialize", hintr:::api_postserialize)
+  api$set404Handler(hintr2_404_handler)
   api
 }
 
@@ -180,7 +181,7 @@ endpoint_model_result <- function(queue) {
 endpoint_model_cancel <- function(queue) {
   response <- pkgapi::pkgapi_returning_json("ModelCancelResponse.schema",
                                             schema_root())
-  pkgapi::pkgapi_endpoint$new("GET",
+  pkgapi::pkgapi_endpoint$new("POST",
                               "/model/cancel/<id>",
                               model_cancel(queue),
                               returning = response,
