@@ -958,7 +958,7 @@ test_that("api can call endpoint_hintr_worker_status", {
 test_that("endpoint_hintr_stop works", {
   test_redis_available()
 
-  queue <- test_queue(workers = 0)
+  queue <- test_queue()
   mock_hintr_stop <- mockery::mock(function() NULL)
   mockery::stub(endpoint_hintr_stop, "hintr_stop", mock_hintr_stop)
   endpoint <- endpoint_hintr_stop(queue)
@@ -970,7 +970,7 @@ test_that("endpoint_hintr_stop works", {
 test_that("api can call endpoint_hintr_stop", {
   test_redis_available()
 
-  queue <- test_queue(workers = 0)
+  queue <- test_queue()
   mock_hintr_stop <- mockery::mock(function() NULL)
   with_mock("hintr2:::hintr_stop" = mock_hintr_stop, {
     api <- api_build(queue)
@@ -978,4 +978,19 @@ test_that("api can call endpoint_hintr_stop", {
   })
   expect_equal(res$status, 200)
   mockery::expect_called(mock_hintr_stop, 1)
+})
+
+
+test_that("404 errors have sensible schema", {
+  queue <- test_queue()
+  api <- api_build(queue)
+  res <- api$request("GET", "/meaning-of-life")
+
+  expect_equal(res$status, 404)
+  response <- jsonlite::fromJSON(res$body)
+  expect_equal(response$status, "failure")
+  expect_equal(response$errors[1, "error"], "NOT_FOUND")
+  expect_equal(response$errors[1, "detail"],
+               "GET /meaning-of-life is not a valid hintr path")
+  expect_equal(response$data, NULL)
 })
