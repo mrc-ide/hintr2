@@ -992,5 +992,5 @@ test_that("404 errors have sensible schema", {
   expect_equal(response$errors[1, "error"], "NOT_FOUND")
   expect_equal(response$errors[1, "detail"],
                "GET /meaning-of-life is not a valid hintr path")
-  expect_equal(response$data, NULL)
+  expect_equal(response$data, setNames(list(), list()))
 })
