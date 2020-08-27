@@ -541,7 +541,7 @@ test_that("api can call endpoint_model_cancel", {
   expect_equal(body$status, "success")
   expect_true(!is.null(body$data$id))
 
-  res <- api$request("GET", sprintf("/model/cancel/%s", body$data$id))
+  res <- api$request("POST", sprintf("/model/cancel/%s", body$data$id))
   expect_equal(res$status, 200)
   body <- jsonlite::fromJSON(res$body)
 
