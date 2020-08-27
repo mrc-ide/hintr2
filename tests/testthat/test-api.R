@@ -982,6 +982,8 @@ test_that("api can call endpoint_hintr_stop", {
 
 
 test_that("404 errors have sensible schema", {
+  test_redis_available()
+
   queue <- test_queue()
   api <- api_build(queue)
   res <- api$request("GET", "/meaning-of-life")
